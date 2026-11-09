@@ -517,6 +517,12 @@ kbd {
   font-weight: 400;
 }
 
+/* Fell's italic caps are period swashes (J reads as a script I), so the
+   chosen abbreviation takes Garamond's italic instead. */
+.pick-version.on strong {
+  font-family: var(--book);
+}
+
 .pick-version span {
   font-style: italic;
   white-space: nowrap;
