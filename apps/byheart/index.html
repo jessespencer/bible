@@ -9,12 +9,19 @@
     <meta name="description" content="Memorize Scripture, up to whole books, one verse at a time." />
     <meta name="theme-color" content="#f5f0e6" />
     <title>By Heart</title>
+    <!-- Day or Night before first paint. The choice is bible-ui's `bui-theme`, shared with
+         Atlas and Lineage; until one is made, By Heart follows the system. -->
     <script>
-      document.documentElement.dataset.theme =
-        localStorage.getItem('byheart.theme') ||
-        (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-      if (document.documentElement.dataset.theme === 'dark')
-        document.querySelector('meta[name="theme-color"]').content = '#020611'
+      try {
+        // By Heart's own setting from before the apps shared one.
+        var legacy = localStorage.getItem('byheart.theme')
+        if (legacy && !localStorage.getItem('bui-theme')) localStorage.setItem('bui-theme', legacy)
+        localStorage.removeItem('byheart.theme')
+        var saved = localStorage.getItem('bui-theme')
+      } catch (e) {}
+      if (saved ? saved === 'light' : !matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = 'light'
+      else document.querySelector('meta[name="theme-color"]').content = '#020611'
     </script>
   </head>
   <body>

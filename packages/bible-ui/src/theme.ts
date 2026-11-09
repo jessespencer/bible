@@ -35,9 +35,14 @@ export const setTheme = (theme: Theme): void => {
   }
 };
 
-/** Runs after the theme changes, here or in another tab. Canvas and WebGL code redraws here. */
-export const onThemeChange = (callback: (theme: Theme) => void): void => {
-  document.addEventListener(EVENT, (event) => callback((event as CustomEvent<Theme>).detail));
+/**
+ * Runs after the theme changes, here or in another tab. Canvas and WebGL code redraws here.
+ * Returns a function that stops listening.
+ */
+export const onThemeChange = (callback: (theme: Theme) => void): (() => void) => {
+  const listener = (event: Event) => callback((event as CustomEvent<Theme>).detail);
+  document.addEventListener(EVENT, listener);
+  return () => document.removeEventListener(EVENT, listener);
 };
 
 // Another tab of any app switched: follow it.
