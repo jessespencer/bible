@@ -19,7 +19,7 @@
   color-scheme: light;
 }
 
-:root[data-theme='dark'] {
+:root:not([data-theme='light']) {
   /* Deep Night, shared with Atlas and Lineage; Ember is By Heart's own star */
   --paper: #020611;
   --ink: #e9e2d2;

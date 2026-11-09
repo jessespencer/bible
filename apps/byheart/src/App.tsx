@@ -1,3 +1,4 @@
+import { currentTheme, onThemeChange, setTheme as saveTheme } from '@jessespencer/bible-ui/theme'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { PageView } from './components/PageView'
 import { Session, type SessionItem } from './components/Session'
@@ -20,8 +21,6 @@ import {
 } from './lib/outline'
 import { WHERE_MINIMUM, startedVerses } from './lib/where'
 
-type Theme = 'light' | 'dark'
-
 const placeStore = 'byheart.place'
 
 const loadPlace = () => {
@@ -33,18 +32,12 @@ const loadPlace = () => {
   }
 }
 
-const initialTheme = (): Theme => {
-  const saved = localStorage.getItem('byheart.theme')
-  if (saved === 'light' || saved === 'dark') return saved
-  return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-}
-
 export const App = () => {
   const [place, setPlace] = useState(loadPlace)
   const [welcoming, setWelcoming] = useState(() => !localStorage.getItem(placeStore))
   const [progress, setProgress] = useState<Progress>(loadProgress)
   const [session, setSession] = useState<SessionItem[]>()
-  const [theme, setTheme] = useState<Theme>(initialTheme)
+  const [theme, setTheme] = useState(currentTheme)
   const [view, setView] = useState<'page' | 'map' | 'quiz' | 'where'>('page')
   const [section, setSection] = useState<Section>()
   const [recall, setRecall] = useState<Progress>(loadStructureRecall)
@@ -52,11 +45,12 @@ export const App = () => {
   const outline = outlineOf(book.code)
   const mapScroll = useRef(0)
 
-  // Before paint, so the theme reveal captures the new colours.
+  // bible-ui keeps the choice, shared with Atlas and Lineage and followed across tabs.
+  useEffect(() => onThemeChange(setTheme), [])
+
+  // By Heart's paper is a shade off bible-ui's, so the browser chrome takes ours.
   useLayoutEffect(() => {
-    document.documentElement.dataset.theme = theme
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#f5f0e6' : '#020611')
-    writeStore('byheart.theme', theme)
   }, [theme])
 
   // Nothing is saved until the welcome is answered, so it returns if left unfinished.
@@ -194,7 +188,7 @@ export const App = () => {
       onBook={(code, chapter = 1) => setPlace({ ...place, book: code, chapter })}
       onChapter={(chapter) => setPlace({ ...place, chapter })}
       onTranslation={(translation) => setPlace({ ...place, translation })}
-      onTheme={(origin) => revealFrom(origin, () => setTheme((t) => (t === 'light' ? 'dark' : 'light')))}
+      onTheme={(origin) => revealFrom(origin, () => saveTheme(currentTheme() === 'light' ? 'dark' : 'light'))}
       onStart={(items) => withTransition('screen', () => setSession(items))}
       onMap={
         outline &&

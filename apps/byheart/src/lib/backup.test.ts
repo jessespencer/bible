@@ -8,11 +8,11 @@ describe('backups', () => {
 
   it('carries progress, structure recall, place and theme, but never keys or Bible text', () => {
     localStorage.setItem('byheart.progress', progress)
-    localStorage.setItem('byheart.theme', 'dark')
+    localStorage.setItem('bui-theme', 'dark')
     localStorage.setItem('byheart.esvKey', 'secret')
     localStorage.setItem('byheart.text.BSB.EPH.1', '[]')
 
-    expect(makeBackup().stores).toEqual({ 'byheart.progress': progress, 'byheart.theme': 'dark' })
+    expect(makeBackup().stores).toEqual({ 'byheart.progress': progress, 'bui-theme': 'dark' })
   })
 
   it('round-trips through a file and restores what was saved', () => {
@@ -29,6 +29,11 @@ describe('backups', () => {
     localStorage.setItem('byheart.structure', '{}')
     restoreBackup({ 'byheart.progress': progress })
     expect(localStorage.getItem('byheart.structure')).toBeNull()
+  })
+
+  it('reads the theme from backups made before it was shared with Atlas and Lineage', () => {
+    const file = JSON.stringify({ app: 'by-heart', version: 1, stores: { 'byheart.theme': 'light' } })
+    expect(readBackup(file)).toEqual({ 'bui-theme': 'light' })
   })
 
   it('rejects files that are not By Heart backups', () => {

@@ -36,7 +36,7 @@ Work agreed but not done yet, roughly in order. Tick items off in the commit tha
 - [ ] Try By Heart's Greek layer with an ESV key: it was ported onto the current page but needs a key to show
 - [x] Launch By Heart: add it to the deploy workflow and to bible-ui's `APPS` switcher
 - [x] Give By Heart the app switcher in its own header
-- [ ] Share Night/Day between By Heart and Atlas and Lineage (By Heart keeps its own `byheart.theme`, and its light default follows the system)
+- [x] Share Night/Day between By Heart and Atlas and Lineage (By Heart still follows the system until a choice is saved)
 - [x] Close by-heart PR 7 and archive the by-heart repo
 
 ## Skipped

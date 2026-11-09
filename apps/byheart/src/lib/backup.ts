@@ -2,7 +2,9 @@ import { today, writeStore } from './memory'
 
 // What a backup carries. Keys stay out because they are secrets, and Bible text because
 // it can be fetched again and some of it may not be stored at all.
-const KEPT = ['byheart.progress', 'byheart.structure', 'byheart.place', 'byheart.theme']
+// The theme is bible-ui's, shared with Atlas and Lineage; older backups call it byheart.theme.
+const THEME = 'bui-theme'
+const KEPT = ['byheart.progress', 'byheart.structure', 'byheart.place', THEME]
 
 interface Backup {
   app: 'by-heart'
@@ -32,16 +34,18 @@ export const readBackup = (text: string): Record<string, string> => {
     throw new BackupError('That file isn’t a By Heart backup.')
   }
   if (parsed.version !== 1) throw new BackupError('That backup is from a newer By Heart. Update and try again.')
-  const stores = Object.entries(parsed.stores).filter(([key, value]) => {
-    if (!KEPT.includes(key) || typeof value !== 'string') return false
-    if (key === 'byheart.theme') return value === 'light' || value === 'dark'
-    try {
-      JSON.parse(value)
-      return true
-    } catch {
-      return false
-    }
-  })
+  const stores = Object.entries(parsed.stores)
+    .map(([key, value]) => [key === 'byheart.theme' ? THEME : key, value] as const)
+    .filter(([key, value]) => {
+      if (!KEPT.includes(key) || typeof value !== 'string') return false
+      if (key === THEME) return value === 'light' || value === 'dark'
+      try {
+        JSON.parse(value)
+        return true
+      } catch {
+        return false
+      }
+    })
   return Object.fromEntries(stores)
 }
 
