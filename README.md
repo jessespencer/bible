@@ -4,7 +4,7 @@
 
 A family of free, open-source apps for reading and studying the Bible. Each one takes a single idea and gives it a whole screen. Atlas and Lineage share one design system, so moving between them feels like turning pages in the same book, and one app switcher links all three.
 
-**▶ [Open Atlas](https://jessedestroys.com/bible/atlas/)** · **[Open Lineage](https://jessedestroys.com/bible/lineage/)** · **[Open By Heart](https://jessedestroys.com/bible/byheart/)**
+**▶ [Open Atlas](https://jessespencer.dev/bible/atlas/)** · **[Open Lineage](https://jessespencer.dev/bible/lineage/)** · **[Open By Heart](https://jessespencer.dev/bible/byheart/)**
 
 ## The apps
 
@@ -19,7 +19,7 @@ The small notes in a Bible's margin send you from one passage to another that ec
 - **Two more ways to see it.** A 66×66 heatmap of which books lean on each other, and a spiral galaxy where every verse is a star.
 - **Search, filter, shuffle.** Jump to `John 3:16` or `1 cor 13:4-7`, filter by section or reader votes, or land on a random connection.
 
-**▶ [Open Atlas](https://jessedestroys.com/bible/atlas/)** · [More about Atlas →](apps/atlas/README.md)
+**▶ [Open Atlas](https://jessespencer.dev/bible/atlas/)** · [More about Atlas →](apps/atlas/README.md)
 
 ### 🌿 Lineage: 4,150 years on one screen
 
@@ -32,7 +32,7 @@ An interactive timeline from Adam to the resurrection. It opens on the whole sto
 - **Family Tree** draws the generations as a subway map, with the Messianic line running to Jesus.
 - **King and Priest** follows the royal line from Judah and the priestly line from Levi, both leading to Jesus.
 
-**▶ [Open Lineage](https://jessedestroys.com/bible/lineage/)** · [More about Lineage →](apps/lineage/README.md)
+**▶ [Open Lineage](https://jessespencer.dev/bible/lineage/)** · [More about Lineage →](apps/lineage/README.md)
 
 ### ♡ By Heart: memorize Scripture, up to whole books
 
@@ -46,7 +46,7 @@ By Heart turns memorizing into reading. Each verse climbs a ladder of eight step
 - **The Greek behind the ESV.** In Ephesians, tap a word to see the Greek, its gloss and grammar, and where else it appears.
 - **Eleven translations,** from the BSB, KJV and Geneva Bible to the ESV, NIV, NKJV and NLT with your own free key. Progress is kept per translation, and you can save a backup.
 
-**▶ [Open By Heart](https://jessedestroys.com/bible/byheart/)** · [More about By Heart →](apps/byheart/README.md)
+**▶ [Open By Heart](https://jessespencer.dev/bible/byheart/)** · [More about By Heart →](apps/byheart/README.md)
 
 ## Moving between them
 
@@ -101,9 +101,9 @@ pnpm build            # builds every app
 
 All three apps are deployed together to GitHub Pages via `.github/workflows/deploy.yml`:
 
-- Atlas → `https://jessedestroys.com/bible/atlas/`
-- Lineage → `https://jessedestroys.com/bible/lineage/`
-- By Heart → `https://jessedestroys.com/bible/byheart/`
+- Atlas → `https://jessespencer.dev/bible/atlas/`
+- Lineage → `https://jessespencer.dev/bible/lineage/`
+- By Heart → `https://jessespencer.dev/bible/byheart/`
 
 The workflow runs By Heart's tests, builds each app into its own folder of a combined `dist/`, and `pages/index.html` sends `/bible/` on to Atlas. Lineage has no data of its own to ship: it reads Atlas's `data/` from `../atlas/`.
 
