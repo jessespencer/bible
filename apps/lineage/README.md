@@ -2,7 +2,7 @@
 
 > *4,150 years on one screen. Every bar a life, every overlap a shared moment in history.*
 
-**▶ [Open Lineage](https://jessedestroys.com/bible/lineage/)**
+**▶ [Open Lineage](https://jessespencer.dev/bible/lineage/)**
 
 Lineage is an interactive Bible timeline, from Adam to the resurrection of Jesus (~AD 33). It opens on the whole story, then lets you zoom into any reign, read the scripture behind a person, and see who was alive at the same moment. It works on phones as well as desktops.
 

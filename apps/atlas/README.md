@@ -2,7 +2,7 @@
 
 > *344,799 threads woven through 66 books. Every arc a conversation across millennia.*
 
-**▶ [Open Atlas](https://jessedestroys.com/bible/atlas/)**
+**▶ [Open Atlas](https://jessespencer.dev/bible/atlas/)**
 
 ## Why this exists
 
@@ -170,11 +170,11 @@ The site deploys to GitHub Pages from `main` through [`.github/workflows/deploy.
 
 ## Part of a family
 
-Atlas lives alongside [Lineage](https://jessedestroys.com/bible/lineage/), a horizontal Bible timeline from Adam to the resurrection. Both share the [`@jessespencer/bible-ui`](../../packages/bible-ui) design system: IM Fell Great Primer, EB Garamond and DM Mono type, a navy and parchment palette shared with By Heart, and the rainbow gradient.
+Atlas lives alongside [Lineage](https://jessespencer.dev/bible/lineage/), a horizontal Bible timeline from Adam to the resurrection. Both share the [`@jessespencer/bible-ui`](../../packages/bible-ui) design system: IM Fell Great Primer, EB Garamond and DM Mono type, a navy and parchment palette shared with By Heart, and the rainbow gradient.
 
 ## Credits
 
-Arc diagram concept by [Chris Harrison](https://www.chrisharrison.net/index.php/visualizations/BibleViz). Built by [jessedestroys.com](https://www.jessedestroys.com).
+Arc diagram concept by [Chris Harrison](https://www.chrisharrison.net/index.php/visualizations/BibleViz). Built by [jessespencer.dev](https://jessespencer.dev).
 
 > Cross-reference data: OpenBible.info (CC BY 4.0), largely from the public-domain *Treasury of Scripture Knowledge*. Modified: re-indexed to KJV verse numbering.
 > Scripture text: Berean Standard Bible (BSB), dedicated to the public domain.
