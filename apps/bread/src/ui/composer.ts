@@ -23,9 +23,6 @@ const EXAMPLES = [
   "We can't make rent this month",
 ];
 
-// Ways to begin a sentence, offered under the empty field.
-const STARTERS = ["I feel anxious about", "I'm grieving", "I can't forgive", "I need wisdom about"];
-
 const MAX_LENGTH = 500;
 
 export interface ComposerHandle {
@@ -78,21 +75,6 @@ export const createComposer = (
 
   const hearing = el("div", "composer__hearing", form);
   hearing.setAttribute("aria-live", "polite");
-
-  // While the field is empty, ways to begin in the chips' place; writing gives way to the chips.
-  const starters = el("div", "composer__starters", form);
-  el("span", "composer__hearing-label", starters).textContent = "Try";
-  for (const starter of STARTERS) {
-    const button = el("button", "starter", starters);
-    button.type = "button";
-    button.textContent = `${starter}…`;
-    button.addEventListener("click", () => {
-      field.value = `${starter} `;
-      update();
-      field.focus();
-      field.setSelectionRange(field.value.length, field.value.length);
-    });
-  }
 
   // For screen readers; the send button and the cycling examples show the rest.
   const hint = el("p", "sr-only", form);
@@ -167,7 +149,6 @@ export const createComposer = (
     showExample();
     const filled = field.value.trim().length > 0;
     box.classList.toggle("composer__box--filled", filled || field.value.length > 0);
-    form.classList.toggle("composer--empty", !field.value);
     send.disabled = !filled && !steered;
     clearTimeout(hearTimer);
     hearTimer = window.setTimeout(renderHearing, 90);
@@ -217,7 +198,10 @@ export const createComposer = (
       update();
       renderHearing();
     },
-    focus: () => field.focus(),
+    focus: () => {
+      field.focus();
+      field.setSelectionRange(field.value.length, field.value.length);
+    },
     setBusy: (busy) => {
       form.classList.toggle("composer--busy", busy);
       send.disabled = busy || (!field.value.trim() && !steered);

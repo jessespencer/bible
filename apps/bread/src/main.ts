@@ -133,6 +133,15 @@ for (const [key, topic] of Object.entries(topics)) {
       if (!query) startOver();
       return;
     }
+    // Before any answer, a need begins the sentence for the reader to finish, or send as it is.
+    // Words of their own stay; the need only steers them.
+    if (results.hidden) {
+      const written = composer.value();
+      const ownWords = written && !Object.values(topics).some((t) => t.starter === written);
+      composer.set(ownWords ? written : `${topic.starter} `, key, !ownWords);
+      composer.focus();
+      return;
+    }
     query = "";
     steered = key;
     composer.set("", key, true);

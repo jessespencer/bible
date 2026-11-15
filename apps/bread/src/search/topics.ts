@@ -3,6 +3,7 @@ import type { Intent, TopicDefinition } from "./types.ts";
 export const topics: Record<string, TopicDefinition> = {
   anxiety: {
     label: "Anxiety / Worry / Fear",
+    starter: "I'm anxious about",
     keywords: [
       "anxious", "anxiety", "worried", "worry", "fear", "afraid",
       "scared", "nervous", "panic", "dread", "terrified", "uneasy",
@@ -20,6 +21,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   peace: {
     label: "Peace / Calm",
+    starter: "I can't find peace since",
     keywords: [
       "peace", "calm", "rest", "quiet", "still", "tranquil",
       "serenity", "relax", "unrest", "turmoil", "chaos",
@@ -35,6 +37,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   guidance: {
     label: "Guidance / Wisdom / Decisions",
+    starter: "I need wisdom about",
     keywords: [
       "guidance", "guide", "wisdom", "decision", "direction", "path",
       "choose", "choice", "discern", "confused", "lost", "uncertain",
@@ -53,6 +56,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   anger: {
     label: "Anger / Patience",
+    starter: "I keep getting angry at",
     keywords: [
       "angry", "anger", "mad", "furious", "rage", "frustrated",
       "patience", "patient", "impatient", "bitter", "resentment",
@@ -69,6 +73,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   grief: {
     label: "Grief / Loss / Sorrow",
+    starter: "I'm grieving",
     keywords: [
       "grief", "grieving", "loss", "lost", "died", "death", "mourn",
       "mourning", "sorrow", "heartbroken", "devastated", "miss",
@@ -90,6 +95,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   loneliness: {
     label: "Loneliness",
+    starter: "I feel alone since",
     keywords: [
       "lonely", "alone", "isolated", "abandoned", "forsaken",
       "no one", "nobody", "friendless", "rejected", "left out",
@@ -106,6 +112,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   forgiveness: {
     label: "Forgiveness / Bitterness",
+    starter: "I can't forgive",
     keywords: [
       "forgive", "forgiveness", "bitter", "bitterness", "grudge",
       "resent", "resentful", "offense", "offended", "hurt by",
@@ -123,6 +130,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   temptation: {
     label: "Temptation / Addiction",
+    starter: "I keep being tempted to",
     keywords: [
       "temptation", "tempted", "lust", "porn", "pornography",
       "addiction", "addicted", "substance", "alcohol", "drunk",
@@ -142,6 +150,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   shame: {
     label: "Shame / Guilt / Repentance",
+    starter: "I feel ashamed of",
     keywords: [
       "shame", "ashamed", "guilt", "guilty", "regret", "remorse",
       "repent", "repentance", "unworthy", "dirty", "stained",
@@ -160,6 +169,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   endurance: {
     label: "Endurance / Suffering",
+    starter: "It's hard to persevere through",
     keywords: [
       "endurance", "persevere", "perseverance", "suffering", "trial",
       "hardship", "difficult", "tough", "struggle", "hard time",
@@ -178,6 +188,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   gratitude: {
     label: "Gratitude / Joy",
+    starter: "I'm thankful for",
     keywords: [
       "grateful", "thankful", "thanks", "joy", "joyful", "happy",
       "blessed", "blessing", "praise", "celebrate", "rejoice",
@@ -195,6 +206,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   identity: {
     label: "Identity / Assurance / Salvation",
+    starter: "I feel insecure about",
     keywords: [
       "identity", "who am I", "worth", "value", "purpose", "meaning",
       "saved", "salvation", "born again", "believe", "faith",
@@ -215,6 +227,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   justice: {
     label: "Justice / Oppression",
+    starter: "It isn't fair that",
     keywords: [
       "justice", "injustice", "oppression", "oppressed", "rights",
       "fair", "unfair", "discrimination", "racism", "abuse",
@@ -233,6 +246,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   marriage: {
     label: "Marriage / Spouse",
+    starter: "My marriage is",
     keywords: [
       "married", "marriage", "husband", "wife", "spouse", "wedding",
       "divorce", "intimacy", "covenant", "engagement", "partner",
@@ -250,6 +264,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   parenting: {
     label: "Parenting / Children",
+    starter: "With my children,",
     keywords: [
       "parent", "parenting", "child", "children", "son", "daughter",
       "mom", "dad", "mother", "father", "kids", "baby", "teenager",
@@ -266,6 +281,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   health: {
     label: "Health / Illness / Healing",
+    starter: "I'm sick with",
     keywords: [
       "sick", "illness", "cancer", "hospital", "healing", "pain",
       "chronic", "diagnosis", "surgery", "disability", "disease",
@@ -282,6 +298,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   leadership: {
     label: "Leadership / Work",
+    starter: "At work,",
     keywords: [
       "leader", "leadership", "boss", "manager", "work", "job",
       "career", "coworker", "workplace", "business", "ambition",
@@ -301,6 +318,7 @@ export const topics: Record<string, TopicDefinition> = {
 
   money: {
     label: "Money / Provision",
+    starter: "Money is tight since",
     // Verse text is matched by substring, so nothing short enough to hide inside other words
     // ("owe" in "power", "rent" in "parent", "give" in "forgive").
     keywords: [

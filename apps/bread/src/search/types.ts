@@ -20,6 +20,8 @@ export type EmotionalTone =
 
 export interface TopicDefinition {
   label: string;
+  /** How a sentence about this need might begin; tapping the need on the first page writes it. */
+  starter: string;
   keywords: string[];
   boostPhrases: string[];
   avoidKeywords: string[];

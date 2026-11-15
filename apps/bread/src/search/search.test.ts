@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { anchorIndices, anchorVerses } from "./anchors.ts";
 import { buildLinkData } from "./linkData.ts";
 import links from "./links.json" with { type: "json" };
-import { parseNeedProfile } from "./needProfile.ts";
+import { hearTopics, parseNeedProfile } from "./needProfile.ts";
+import { topics } from "./topics.ts";
 import { createVerseSearch } from "./search.ts";
 import { chapterKey, indexToLabel, indexToParam, refToIndex } from "./verses.ts";
 
@@ -84,6 +85,11 @@ describe("finding verses for a need", () => {
 
   it("still returns three verses for a need outside every topic", () => {
     expect(find("tell me about the tabernacle curtains")).toHaveLength(3);
+  });
+
+  it("hears each need's opening words as that need", () => {
+    const misheard = Object.entries(topics).filter(([key, topic]) => hearTopics(topic.starter)[0] !== key);
+    expect(misheard.map(([key]) => key)).toEqual([]);
   });
 
   it("hears a lost job as work, not a bereavement", () => {
