@@ -44,6 +44,20 @@ describe("finding verses for a need", () => {
     expect(find("my dad just died")).toContain("Matthew 5:4");
   });
 
+  it("hears a death before the family members named with it", () => {
+    expect(parseNeedProfile("My mom passed away and I'm so worried about my dad being alone").primaryTopic).toBe("grief");
+  });
+
+  it("lets the reader steer to another topic, keeping the one it heard behind it", () => {
+    const need = parseNeedProfile("I'm anxious about my marriage", "marriage");
+    expect(need.primaryTopic).toBe("marriage");
+    expect(need.secondaryTopics).toContain("anxiety");
+  });
+
+  it("finds verses for a topic alone, with nothing written", () => {
+    expect(search.find(parseNeedProfile("", "gratitude"))).toHaveLength(3);
+  });
+
   it("returns three verses from three different chapters", () => {
     const results = search.find(parseNeedProfile("I can't forgive my brother"));
     expect(results).toHaveLength(3);

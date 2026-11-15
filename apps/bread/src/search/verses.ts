@@ -63,3 +63,15 @@ export const chapterKey = (index: number): string => {
   const { book, chapter } = locate(index);
   return `${book}:${chapter}`;
 };
+
+/** The verses around one, inside its chapter: `radius` either side where the chapter allows. */
+export const around = (index: number, radius: number): number[] => {
+  const { book, chapter, verse } = locate(index);
+  const count = books[book]!.verseCounts[chapter - 1]!;
+  const first = index - (Math.min(verse - 1, radius));
+  const last = index + Math.min(count - verse, radius);
+  return Array.from({ length: last - first + 1 }, (_, i) => first + i);
+};
+
+/** The verse number alone, for numbering a passage. */
+export const verseNumber = (index: number): number => locate(index).verse;

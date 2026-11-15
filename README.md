@@ -54,8 +54,10 @@ By Heart turns memorizing into reading. Each verse climbs a ladder of eight step
 
 Type something like "I'm anxious about my job interview" or "my dad just died" and read three verses for it, each from a different chapter. No AI model and nothing sent anywhere: the search runs in your browser, guided by 17 topics with hand-picked verses.
 
-- **Ask in your own words.** It finds the topic, sets aside the filler, and searches the rest.
-- **Show me others.** Draw three more for the same need, never repeating what you've seen.
+- **Ask in your own words.** As you write, chips show what it's hearing, and a tap steers it. Or begin from one of 17 needs.
+- **Read around it.** Each verse opens onto the verses either side of it in its chapter.
+- **Keep it.** Copy a verse, or share it as a typeset image.
+- **Three more.** Draw another three for the same need, never repeating what you've seen.
 - **Follow a verse outward.** Each one opens in Atlas with its cross-references.
 - **Read in any bundled translation.** The search reads the WEB; results show in the one you pick.
 

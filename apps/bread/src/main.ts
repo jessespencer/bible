@@ -1,6 +1,7 @@
 import "@jessespencer/bible-ui/style.css";
 import "./style.css";
 import { APPS, appHref, createHeader, loadFonts } from "@jessespencer/bible-ui";
+import { shareView } from "@jessespencer/bible-ui/share";
 import { createTranslationPicker } from "@jessespencer/bible-ui/translation-picker";
 import {
   DEFAULT_TRANSLATION,
@@ -12,28 +13,13 @@ import {
 import { parseNeedProfile } from "./search/needProfile.ts";
 import { createVerseSearch, type VerseSearch } from "./search/search.ts";
 import { topics } from "./search/topics.ts";
-import { indexToLabel, indexToParam } from "./search/verses.ts";
+import { indexToParam } from "./search/verses.ts";
+import { showCards, skeletonCards } from "./ui/cards.ts";
+import { createComposer, topicName } from "./ui/composer.ts";
+import { el, iconButton, prefersStillness, toast } from "./ui/dom.ts";
 
 // The topics and their phrases were tuned on the World English Bible, so search always reads it.
 const SEARCH_FILE = translationById("web")!.file;
-
-const HINTS = [
-  "I'm anxious about…",
-  "I'm grieving the loss of…",
-  "I need wisdom about…",
-  "I can't forgive…",
-  "I feel lonely because…",
-  "I'm tempted to…",
-  "I feel overwhelmed by…",
-  "I'm worried about my family…",
-];
-
-const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className = "", parent?: HTMLElement) => {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  parent?.append(node);
-  return node;
-};
 
 // ─── Data: Atlas's files, one string per verse ───────────────────
 
@@ -68,7 +54,8 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 const header = createHeader({ title: "Bread Alone", subtitle: "Three verses for what you're carrying", appId: "bread", compact: true });
 app.append(header.element);
 
-let translation: Translation = translationById(new URLSearchParams(location.search).get("tr")) ?? savedTranslation();
+const params = new URLSearchParams(location.search);
+let translation: Translation = translationById(params.get("tr")) ?? savedTranslation();
 createTranslationPicker({
   parent: header.controls,
   current: translation,
@@ -76,60 +63,66 @@ createTranslationPicker({
     translation = picked;
     saveTranslation(picked);
     writeUrl();
-    void render();
+    if (shown.length) void render();
   },
 });
 
 const main = el("main", "bread", app);
 
-const intro = el("section", "bread__intro", main);
-el("p", "bread__epigraph", intro).textContent =
-  "“Man shall not live by bread alone, but by every word that proceedeth out of the mouth of God.”";
-el("p", "bread__epigraph-ref", intro).textContent = "Matthew 4:4 · KJV";
+const hero = el("section", "hero", main);
+const epigraph = el("figure", "epigraph", hero);
+el("blockquote", "epigraph__text", epigraph).textContent =
+  "Man shall not live by bread alone, but by every word that proceedeth out of the mouth of God.";
+el("figcaption", "epigraph__ref", epigraph).textContent = "Matthew 4:4 · KJV";
 
-const form = el("form", "bread__form", main);
-form.setAttribute("role", "search");
-const label = el("label", "bread__label", form);
-label.htmlFor = "need";
-label.textContent = "What are you carrying today?";
-const row = el("div", "bread__row", form);
-const input = el("input", "bread__input", row);
-input.id = "need";
-input.type = "search";
-input.autocomplete = "off";
-input.enterKeyHint = "search";
-input.maxLength = 500;
-input.placeholder = "I'm anxious about my job interview";
-const submit = el("button", "bread__submit", row);
-submit.type = "submit";
-submit.textContent = "Find verses";
+const composer = createComposer((text, steer) => {
+  query = text;
+  steered = steer;
+  void run();
+});
+hero.append(composer.element);
 
-const hints = el("div", "bread__hints", form);
-for (const hint of HINTS) {
-  const chip = el("button", "bread__hint", hints);
-  chip.type = "button";
-  chip.textContent = hint;
-  chip.addEventListener("click", () => {
-    input.value = hint.replace("…", " ");
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
+const results = el("section", "results", main);
+results.setAttribute("aria-live", "polite");
+results.hidden = true;
+const resultsHead = el("div", "results__head", results);
+const list = el("ol", "cards", results);
+const resultsFoot = el("div", "results__foot", results);
+const more = iconButton("shuffle", "Three more", "pill-button pill-button--primary");
+const shareLink = iconButton("link", "Share this search", "pill-button");
+resultsFoot.append(more, shareLink);
+
+// Every need the app knows, for a reader who would rather choose than write.
+const browse = el("section", "browse", main);
+el("h2", "browse__title", browse).textContent = "Or begin with a need";
+const grid = el("div", "browse__grid", browse);
+for (const [key, topic] of Object.entries(topics)) {
+  const button = el("button", "need", grid);
+  button.type = "button";
+  el("span", "need__name", button).textContent = topicName(key);
+  const rest = topic.label.split(" / ").slice(1).join(" · ");
+  if (rest) el("span", "need__more", button).textContent = rest;
+  button.addEventListener("click", () => {
+    query = "";
+    steered = key;
+    composer.set("", key);
+    void run();
   });
 }
 
-const results = el("section", "bread__results", main);
-results.setAttribute("aria-live", "polite");
-
-// ─── State: the query and what has been shown for it ─────────────
+// ─── State: the need and what has been shown for it ──────────────
 
 let query = "";
+let steered: string | undefined;
 let shown: number[] = [];
 let seen: number[] = [];
 
 const writeUrl = () => {
-  const params = new URLSearchParams();
-  if (query) params.set("q", query);
-  if (translation.id !== DEFAULT_TRANSLATION.id) params.set("tr", translation.id);
-  const search = params.toString();
+  const next = new URLSearchParams();
+  if (query) next.set("q", query);
+  if (steered) next.set("topic", steered);
+  if (translation.id !== DEFAULT_TRANSLATION.id) next.set("tr", translation.id);
+  const search = next.toString();
   history.replaceState(null, "", search ? `?${search}` : location.pathname);
 };
 
@@ -139,74 +132,76 @@ const atlasHref = (verse: number) => {
   return `${appHref(atlas)}?ref=${indexToParam(verse)}${tr}`;
 };
 
-const render = async () => {
-  results.replaceChildren();
-  if (!shown.length) return;
-
-  const text = await loadBible(translation.file);
-  const need = parseNeedProfile(query);
-  const topic = topics[need.primaryTopic];
-  if (topic) el("p", "bread__topic", results).textContent = topic.label;
-
-  const list = el("ol", "bread__list", results);
-  for (const verse of shown) {
-    const card = el("li", "bread__card", list);
-    const quote = el("blockquote", "bread__verse", card);
-    quote.lang = translation.language;
-    quote.textContent = text[verse] ?? "";
-    const foot = el("div", "bread__card-foot", card);
-    el("cite", "bread__ref", foot).textContent = `${indexToLabel(verse)} · ${translation.abbr}`;
-    const link = el("a", "bread__link", foot);
-    link.href = atlasHref(verse);
-    link.textContent = "Cross-references in Atlas";
-  }
-
-  const more = el("button", "bread__more", results);
-  more.type = "button";
-  more.textContent = "Show me others";
-  more.addEventListener("click", () => void run({ shuffle: true }));
+const renderHead = () => {
+  resultsHead.replaceChildren();
+  const need = parseNeedProfile(query, steered);
+  const title = el("h2", "results__title", resultsHead);
+  title.append(need.primaryTopic === "general" ? "Three verses for today" : "Three verses for ");
+  if (need.primaryTopic !== "general") el("em", "", title).textContent = topicName(need.primaryTopic).toLowerCase();
+  if (query) el("p", "results__query", resultsHead).textContent = `“${query}”`;
 };
 
-const run = async ({ shuffle = false } = {}) => {
-  if (!query) return;
-  submit.disabled = true;
-  submit.textContent = "Reading…";
+const render = async () => {
+  const text = await loadBible(translation.file);
+  renderHead();
+  await showCards(list, { verses: shown, text, translation, atlasHref });
+};
+
+const run = async ({ again = false } = {}) => {
+  if (!query && !steered) return;
+  writeUrl();
+  composer.setBusy(true);
+  main.classList.add("bread--answered");
+  results.hidden = false;
+  let waiting: HTMLElement | null = null;
   try {
+    if (!list.childElementCount) {
+      list.remove();
+      waiting = skeletonCards(results);
+      results.insertBefore(waiting, resultsFoot);
+    }
     const search = await getSearch();
-    const need = parseNeedProfile(query);
-    if (!shuffle) seen = [];
-    shown = search.find(need, { exclude: seen, shuffle });
+    const need = parseNeedProfile(query, steered);
+    if (!again) seen = [];
+    shown = search.find(need, { exclude: seen, shuffle: again });
     // Every verse has been offered: start the round again.
     if (!shown.length) {
       seen = [];
       shown = search.find(need, { shuffle: true });
     }
     seen.push(...shown);
+    waiting?.remove();
+    if (!list.isConnected) results.insertBefore(list, resultsFoot);
     await render();
+    if (!again && results.getBoundingClientRect().top > innerHeight * 0.6) {
+      results.scrollIntoView({ behavior: prefersStillness() ? "auto" : "smooth", block: "start" });
+    }
   } catch (error) {
     console.error(error);
-    results.replaceChildren();
-    el("p", "bread__error", results).textContent = "The verses couldn't load. Check your connection and try again.";
+    waiting?.remove();
+    resultsHead.replaceChildren();
+    el("p", "results__error", resultsHead).textContent = "The verses couldn't load. Check your connection and try again.";
   } finally {
-    submit.disabled = false;
-    submit.textContent = "Find verses";
+    composer.setBusy(false);
   }
 };
 
-form.addEventListener("submit", (event) => {
-  event.preventDefault();
-  query = input.value.trim().slice(0, 500);
-  writeUrl();
-  void run();
+more.addEventListener("click", () => void run({ again: true }));
+shareLink.addEventListener("click", async () => {
+  const outcome = await shareView("Bread Alone", location.href);
+  if (outcome === "copied") toast("Link copied");
+  if (outcome === "failed") toast("Couldn't copy the link");
 });
 
-// A shared link opens on its answer; otherwise the index builds while the reader types.
-const initial = new URLSearchParams(location.search).get("q")?.trim();
-if (initial) {
-  input.value = query = initial;
+// A shared link opens on its answer; otherwise the index builds while the reader writes.
+const initialQuery = params.get("q")?.trim() ?? "";
+const initialTopic = params.get("topic") ?? undefined;
+if (initialQuery || (initialTopic && initialTopic in topics)) {
+  query = initialQuery;
+  steered = initialTopic && initialTopic in topics ? initialTopic : undefined;
+  composer.set(query, steered);
   void run();
 } else {
-  input.addEventListener("focus", () => void getSearch(), { once: true });
   // Safari has no requestIdleCallback.
   (window.requestIdleCallback ?? setTimeout)(() => void getSearch());
 }

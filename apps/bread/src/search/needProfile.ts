@@ -98,6 +98,11 @@ function contentTokenize(text: string): string[] {
   return tokenize(text).filter((w) => !STOP_WORDS.has(w));
 }
 
+// Words heavy enough that their topic should lead, whatever else the query mentions.
+const WEIGHTY: Record<string, string[]> = {
+  grief: ["passed away", "passed on", "died", "dying", "death", "funeral", "lost my", "miscarr", "killed", "stillborn"],
+};
+
 // Tone-to-topic affinity map for tie-breaking
 const TONE_TOPIC_AFFINITY: Partial<Record<EmotionalTone, string>> = {
   grieving: "grief",
@@ -143,6 +148,9 @@ function detectTopics(
     for (const avoid of def.avoidKeywords) {
       if (lower.includes(avoid.toLowerCase())) score -= 0.5;
     }
+
+    // A death outweighs whoever else is named: "my mom passed away" is grief before it's parenting.
+    if (WEIGHTY[topicKey]?.some((phrase) => lower.includes(phrase))) score += 2;
 
     if (score > 0) {
       scores.push({ topic: topicKey, score });
@@ -277,12 +285,21 @@ function expandSearchTerms(
   return Array.from(terms);
 }
 
-export function parseNeedProfile(rawQuery: string): NeedProfile {
+/**
+ * What a query asks for. `topic` steers it: the reader picked a topic from the chips or the list,
+ * so it leads whatever the words suggested, and the other topics heard stay behind it.
+ */
+export function parseNeedProfile(rawQuery: string, topic?: string): NeedProfile {
   const cleanedQuery = cleanQuery(rawQuery);
   const emotionalTone = detectEmotionalTone(cleanedQuery);
-  const { primary, secondary, scores } = detectTopics(cleanedQuery, emotionalTone);
+  const detected = detectTopics(cleanedQuery, emotionalTone);
+  const steered = topic !== undefined && topic in topics && topic !== detected.primary;
+  const primary = steered ? topic : detected.primary;
+  const secondary = steered
+    ? [detected.primary, ...detected.secondary].filter((t) => t !== topic && t !== "general").slice(0, 2)
+    : detected.secondary;
   const intent = detectIntent(cleanedQuery, primary);
-  const searchTerms = expandSearchTerms(cleanedQuery, primary, secondary, scores);
+  const searchTerms = expandSearchTerms(cleanedQuery, primary, secondary, detected.scores);
 
   return {
     originalQuery: rawQuery,
@@ -293,4 +310,11 @@ export function parseNeedProfile(rawQuery: string): NeedProfile {
     emotionalTone,
     searchTerms,
   };
+}
+
+/** Every topic heard in a query, strongest first, for the chips under the composer. */
+export function hearTopics(rawQuery: string): string[] {
+  const cleanedQuery = cleanQuery(rawQuery);
+  const { scores } = detectTopics(cleanedQuery, detectEmotionalTone(cleanedQuery));
+  return scores.map((s) => s.topic);
 }
