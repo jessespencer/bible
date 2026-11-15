@@ -6,6 +6,7 @@ import {
   DEFAULT_TRANSLATION, saveTranslation, savedTranslation, translationById, type Translation,
 } from '@jessespencer/bible-ui/translations';
 import { initSelectMenus } from '@jessespencer/bible-ui/select-menu';
+import { initTooltips } from '@jessespencer/bible-ui/tooltip';
 import { shareView } from '@jessespencer/bible-ui/share';
 import { Check, createElement, Compass, Grid3x3, Orbit, Rainbow, Share2, Shuffle, Scaling } from 'lucide';
 import { GENRES } from './data/genres';
@@ -963,6 +964,7 @@ async function main() {
   document.getElementById('view-galaxy')!.prepend(createElement(Orbit));
   document.getElementById('view-heatmap')!.prepend(createElement(Grid3x3));
   initSelectMenus();
+  initTooltips();
   createSky(document.getElementById('canvas-container')!);
   // Galaxy keeps its night sky either way; the arcs, axis and heatmap redraw in the new colours.
   onThemeChange(theme => {

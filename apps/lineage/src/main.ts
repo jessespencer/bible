@@ -3,6 +3,7 @@ import "./style.css";
 import { createHeader, loadFonts } from "@jessespencer/bible-ui";
 import { createGuide } from "@jessespencer/bible-ui/guide";
 import { initSelectMenus } from "@jessespencer/bible-ui/select-menu";
+import { initTooltips } from "@jessespencer/bible-ui/tooltip";
 import { Compass, createElement } from "lucide";
 import {
   yearToX,
@@ -76,6 +77,7 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 // -- Load shared fonts --
 loadFonts();
 initSelectMenus();
+initTooltips();
 
 // Works offline once visited, and the browser can install it (public/sw.js). Production only.
 if (import.meta.env.PROD && "serviceWorker" in navigator) {

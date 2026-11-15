@@ -2076,3 +2076,40 @@ kbd {
   min-height: 100svh;
   padding-bottom: 0;
 }
+
+/* Tooltips (bible-ui's initTooltips), in By Heart's paper and ink */
+.bui-tip {
+  position: fixed;
+  z-index: 1000;
+  max-width: min(280px, calc(100vw - 16px));
+  width: max-content;
+  padding: 4px 10px 5px;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 8px 24px color-mix(in srgb, #000 22%, transparent);
+  color: var(--ink);
+  font-family: var(--book);
+  font-size: 15px;
+  line-height: 1.25;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 120ms, transform 120ms var(--ease-out);
+}
+
+.bui-tip--below {
+  transform: translateY(-3px);
+}
+
+.bui-tip--on {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bui-tip {
+    transform: none;
+    transition: opacity 120ms;
+  }
+}

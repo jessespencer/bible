@@ -20,6 +20,16 @@ let tip: HTMLDivElement | null = null;
 let current: HTMLElement | null = null;
 let timer = 0;
 let hiddenAt = 0;
+// A tip follows its element's words while it shows: "Share" turning to "Link copied".
+const watcher = new MutationObserver(() => {
+  if (!current || !tip) return;
+  const text = tipFor(current);
+  if (!text) return hide();
+  if (tip.textContent !== text) {
+    tip.textContent = text;
+    place(current);
+  }
+});
 
 const hasVisibleWords = (el: HTMLElement): boolean => {
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
@@ -73,11 +83,13 @@ const show = (el: HTMLElement) => {
   tip.classList.add("bui-tip--on");
   // A title adds something; a name read again as a description would only repeat it.
   if (el.dataset.buiTip) el.setAttribute("aria-describedby", tip.id);
+  watcher.observe(el, { attributes: true, attributeFilter: ["title", "aria-label"] });
 };
 
 const hide = () => {
   clearTimeout(timer);
   if (!current) return;
+  watcher.disconnect();
   current.removeAttribute("aria-describedby");
   current = null;
   hiddenAt = performance.now();
