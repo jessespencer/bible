@@ -24,7 +24,8 @@ Work agreed but not done yet, roughly in order. Tick items off in the commit tha
 - [x] Check wheel zoom in Firefox (trekhleb's app crashed there): line and page wheel deltas, Firefox's kind, zoom cleanly in both apps. Not yet run in Firefox itself
 - [x] Lineage: closing the Controls panel by clicking the timeline also picks a year
 - [x] Family Tree label widths still estimated for DM Mono (now measured in the real fonts)
-- [ ] Test Galaxy's + and − keys, and everything on a real phone
+- [x] Test Galaxy's + and − keys (zoom in, out and back, limits hold, ⌘/Ctrl left to the browser; + itself sent as a scripted key event)
+- [ ] Test everything on a real phone
 - [x] Move Atlas onto bible-ui's compact header and `setupSheet`
 
 ## Shipping
