@@ -360,6 +360,50 @@ body {
   display: none;
 }
 
+/* Ways to begin: a quiet line of words, not more pills, in the chips' place. */
+.composer__starters {
+  display: none;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 16px;
+  row-gap: 2px;
+  min-height: 30px;
+  padding: 3px 6px 0;
+}
+
+.composer--empty .composer__hearing {
+  display: none;
+}
+
+.composer--empty .composer__starters {
+  display: flex;
+}
+
+.bread--answered .composer__starters {
+  display: none;
+}
+
+.starter {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 16px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: color var(--dur-1), text-decoration-color var(--dur-1);
+}
+
+.starter:hover {
+  color: var(--text-primary);
+  text-decoration-color: var(--accent-border);
+}
+
+
 /* ─── The answer ──────────────────────────────────────────────── */
 
 .results[hidden] {
