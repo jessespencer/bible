@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { anchorVerses } from "./anchors.ts";
+import { anchorIndices, anchorVerses } from "./anchors.ts";
+import { buildLinkData } from "./linkData.ts";
+import links from "./links.json" with { type: "json" };
 import { parseNeedProfile } from "./needProfile.ts";
 import { createVerseSearch } from "./search.ts";
 import { chapterKey, indexToLabel, indexToParam, refToIndex } from "./verses.ts";
@@ -35,9 +37,25 @@ describe("references", () => {
   });
 });
 
+describe("cross-references", () => {
+  it("keeps links.json in step with Atlas's links and the anchors (pnpm --filter bread build:links)", () => {
+    const bin = readFileSync(new URL("../../../atlas/public/data/links.bin", import.meta.url));
+    const rows = new Int16Array(bin.buffer, bin.byteOffset, bin.byteLength / 2);
+    expect(buildLinkData(rows, anchorIndices)).toEqual(links);
+  });
+
+  it("rates the verses readers link most above a passing line", () => {
+    const of = (ref: string) => Number(links.prominence[refToIndex(ref)!]);
+    expect(of("John 3:16")).toBe(9);
+    expect(of("Colossians 3:13")).toBeGreaterThan(of("Isaiah 2:9"));
+  });
+});
+
 describe("finding verses for a need", () => {
   it("answers anxiety with verses about worry", () => {
-    expect(find("I'm anxious about my job interview")).toEqual(["Matthew 6:25", "Proverbs 12:25", "Philippians 4:6"]);
+    const found = find("I'm anxious about my job interview");
+    expect(found).toContain("Philippians 4:6");
+    expect(found.every((ref) => anchorVerses["anxiety"]!.includes(ref))).toBe(true);
   });
 
   it("answers grief with comfort for mourners", () => {
@@ -66,6 +84,24 @@ describe("finding verses for a need", () => {
 
   it("still returns three verses for a need outside every topic", () => {
     expect(find("tell me about the tabernacle curtains")).toHaveLength(3);
+  });
+
+  it("hears a lost job as work, not a bereavement", () => {
+    expect(parseNeedProfile("how do I trust God when I lost my job").primaryTopic).not.toBe("grief");
+  });
+
+  it("answers a need outside every topic from its own words", () => {
+    expect(find("I want to be more generous with money")).toContain("Proverbs 22:9");
+  });
+
+  it("keeps showing others on the topic's ground, not stray keyword matches", () => {
+    let seed = 7;
+    const seeded = createVerseSearch(web, () => (seed = (seed * 16807) % 2147483647) / 2147483647);
+    const need = parseNeedProfile("I can't forgive my brother");
+    const shown = seeded.find(need);
+    for (let round = 0; round < 4; round++) shown.push(...seeded.find(need, { exclude: shown, shuffle: true }));
+    expect(shown.map(indexToLabel)).not.toContain("Isaiah 2:9");
+    expect(shown.every((verse) => Number(links.prominence[verse]) >= 5)).toBe(true);
   });
 
   it("shows others without repeating what was shown", () => {

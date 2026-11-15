@@ -1,3 +1,6 @@
+import { refToIndex } from "./verses.ts";
+
+
 export const anchorVerses: Record<string, string[]> = {
   anxiety: [
     "Philippians 4:6",
@@ -325,3 +328,11 @@ export const anchorVerses: Record<string, string[]> = {
     "Romans 15:13",
   ],
 };
+
+/** Each topic's anchors as verse indices. */
+export const anchorIndices: Record<string, number[]> = Object.fromEntries(
+  Object.entries(anchorVerses).map(([topic, refs]) => [
+    topic,
+    refs.map(refToIndex).filter((index): index is number => index !== null),
+  ]),
+);

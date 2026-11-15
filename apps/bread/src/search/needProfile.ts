@@ -100,7 +100,12 @@ function contentTokenize(text: string): string[] {
 
 // Words heavy enough that their topic should lead, whatever else the query mentions.
 const WEIGHTY: Record<string, string[]> = {
-  grief: ["passed away", "passed on", "died", "dying", "death", "funeral", "lost my", "miscarr", "killed", "stillborn"],
+  grief: [
+    "passed away", "passed on", "died", "dying", "death", "funeral", "miscarr", "killed", "stillborn",
+    // "Lost my" alone would make a lost job a bereavement.
+    ...["mom", "mother", "dad", "father", "wife", "husband", "son", "daughter", "child", "baby", "brother", "sister", "friend", "grand"]
+      .map((who) => `lost my ${who}`),
+  ],
 };
 
 // Tone-to-topic affinity map for tie-breaking

@@ -82,7 +82,8 @@ export const topics: Record<string, TopicDefinition> = {
       "he will swallow up death", "weeping may endure",
       "neither shall there be mourning",
     ],
-    avoidKeywords: [],
+    // Losing a job is hard, but it's work's to answer before grief's.
+    avoidKeywords: ["lost my job", "lost a job", "lost his job", "lost her job"],
     relatedTopics: ["endurance", "peace"],
     defaultIntent: "comfort",
   },
