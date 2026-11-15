@@ -345,8 +345,9 @@ html[data-theme="light"] .bui-appswitch__item-icon {
 /* #app outranks this sheet's load order against each app's own CSS. */
 
 #app .bui-header--compact {
-  /* Each side matches the gap above and below its edge control: the 30px app switcher on the left, the 36px view toggle on the right */
-  padding: 10px 10px 10px 14px;
+  /* Each side matches the gap above and below its edge control: 13px round the 30px app switcher on the left,
+     10px round the 36px view toggle on the right. The top adds 2px for the rainbow line, which sits inside it. */
+  padding: 12px 10px 10px 13px;
   border-bottom: 1px solid var(--border-faint);
   z-index: 60;
 }
@@ -383,7 +384,8 @@ html[data-theme="light"] .bui-appswitch__item-icon {
 
 @media (max-width: 760px) {
   #app .bui-header--compact {
-    padding: 8px 16px;
+    /* The page's 16px gutter at the sides; 2px more on top for the rainbow line */
+    padding: 10px 16px 8px;
   }
 
   #app .bui-header--compact .bui-header__row {
