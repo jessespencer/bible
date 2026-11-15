@@ -345,10 +345,17 @@ html[data-theme="light"] .bui-appswitch__item-icon {
 /* #app outranks this sheet's load order against each app's own CSS. */
 
 #app .bui-header--compact {
-  /* Each side matches the gap above and below its edge control: the 28px logo on the left, the 36px view toggle on the right */
+  /* Each side matches the gap above and below its edge control: the 30px app switcher on the left, the 36px view toggle on the right */
   padding: 10px 10px 10px 14px;
   border-bottom: 1px solid var(--border-faint);
   z-index: 60;
+}
+
+/* One bar height in every app, whatever its controls: each line of the bar is a 36px track,
+   so a smaller control (Bread Alone's translation chip) never pulls the switcher up against the edge. */
+#app .bui-header--compact .bui-header__brand,
+#app .bui-header--compact .bui-header__controls {
+  min-height: 36px;
 }
 
 /* Equal outer columns keep the center slot in the true center of the page. */
