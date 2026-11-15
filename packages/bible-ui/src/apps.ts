@@ -81,24 +81,25 @@ export const APPS: AppEntry[] = [
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1"]);
 
-/**
- * Resolves the URL for an app. In production every app lives on one origin,
- * so the plain path works. In dev each app has its own Vite server, so we
- * cross the port boundary explicitly.
- */
-export const appHref = (app: AppEntry): string =>
-  LOCAL_HOSTS.has(location.hostname)
-    ? `${location.protocol}//${location.hostname}:${app.devPort}${app.path}`
-    : app.path;
+/** On one app's own dev server (`pnpm dev:atlas`), where every other app is on another port. */
+const onAppDevServer = (): boolean =>
+  LOCAL_HOSTS.has(location.hostname) && APPS.some((app) => String(app.devPort) === location.port);
 
 /**
- * The switcher's link to an app. In production Night or Day is shared through storage on one origin.
- * Dev servers are separate origins with separate storage, so the link carries the saved choice as
+ * Resolves the URL for an app. In production, and under `pnpm dev`, every app lives on one origin,
+ * so the plain path works. On a single app's dev server we cross to the other app's port.
+ */
+export const appHref = (app: AppEntry): string =>
+  onAppDevServer() ? `${location.protocol}//${location.hostname}:${app.devPort}${app.path}` : app.path;
+
+/**
+ * The switcher's link to an app. On one origin Night or Day is shared through storage. Crossing to
+ * another app's dev server means separate storage, so the link carries the saved choice as
  * `?bui-theme=`, which each app's index.html saves and strips before first paint.
  */
 export const appSwitchHref = (app: AppEntry): string => {
   const href = appHref(app);
-  if (!LOCAL_HOSTS.has(location.hostname)) return href;
+  if (!onAppDevServer()) return href;
   let theme: string | null = null;
   try {
     theme = localStorage.getItem("bui-theme");

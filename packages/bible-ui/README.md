@@ -18,7 +18,7 @@ Shared design system and UI components for the Bible apps — [Atlas](../../apps
 
 ### Components
 - `createHeader({ title, subtitle, appId, compact })` — site header with title, subtitle, rainbow gradient bar, and a `controls` slot for app-specific buttons. `appId` adds the app switcher. `compact` gives the one-bar layout, with a `center` slot for search. The compact bar is the same height in every app: its brand and controls each sit in a 36px track, whatever size the controls are
-- `APPS`, `appHref(app)`, `appSwitchHref(app)` — the app registry and a URL to each app that works in dev and production. `appSwitchHref` is for switcher links: in dev, where each app is its own origin with its own storage, it adds the saved Night or Day as `?bui-theme=`. Each entry carries its Lucide icon as SVG markup and its accent, and the switcher draws each icon glowing in its own app's accent. They also come alone from `/apps`, with no theme listener or styles, for an app that draws its own switcher (By Heart)
+- `APPS`, `appHref(app)`, `appSwitchHref(app)` — the app registry and a URL to each app that works in dev and production. Under `pnpm dev` and in production every app shares one origin, so both give the plain path. On a single app's own dev server they cross to the other app's port, and `appSwitchHref`, for switcher links, adds the saved Night or Day as `?bui-theme=`, since that port has storage of its own. Each entry carries its Lucide icon as SVG markup and its accent, and the switcher draws each icon glowing in its own app's accent. They also come alone from `/apps`, with no theme listener or styles, for an app that draws its own switcher (By Heart)
 - `setupSheet(panel, handle, onClose)` (from `/sheet`) — the two-height phone bottom sheet. Give the panel `.bui-sheet` and the handle `.bui-sheet__handle`
 - `books`, `bookOffsets`, `totalVerses` (from `/bible`) — the 66 books and KJV verse numbering, 31,102 verses
 - `createGuide({ parent, stage, icon })` (from `/guide`) — a Controls button that opens how to explore the current view, with mouse or touch steps and keyboard keys, plus a one-time tip the first time a reader opens each view. Call `show(id, content)` when the view changes; apps pass their own icons
@@ -33,7 +33,7 @@ Shared design system and UI components for the Bible apps — [Atlas](../../apps
 
 ## Usage
 
-Set the theme before first paint, so Day never flashes dark. In each app's `index.html` `<head>`, after the `theme-color` meta. The first script takes Night or Day from a dev switcher link (`appSwitchHref`) and tidies the address:
+Set the theme before first paint, so Day never flashes dark. In each app's `index.html` `<head>`, after the `theme-color` meta. The first script takes Night or Day from a switcher link between single-app dev servers (`appSwitchHref`) and tidies the address:
 
 ```html
 <script>try { var bp = new URLSearchParams(location.search), bt = bp.get('bui-theme'); if (bt === 'light' || bt === 'dark') { localStorage.setItem('bui-theme', bt); bp.delete('bui-theme'); var bq = bp.toString(); history.replaceState(null, '', location.pathname + (bq ? '?' + bq : '') + location.hash); } } catch (e) {}</script>

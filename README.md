@@ -94,7 +94,7 @@ By Heart draws the same list in its own type: its wordmark opens the apps on a s
 | `apps/bread` | `bread` | Bread Alone — three verses for a need in plain words, searched in the browser. |
 | `packages/bible-ui` | `@jessespencer/bible-ui` | Shared header, app switcher, bottom sheet, verse numbering, fonts, and design tokens. |
 
-A new app joins as another `apps/<name>` folder and an entry in bible-ui's `APPS`, which puts it in the app switcher.
+A new app joins as another `apps/<name>` folder and an entry in bible-ui's `APPS`, which puts it in the app switcher and in `pnpm dev`.
 
 ## Stack
 
@@ -104,13 +104,21 @@ Vanilla TypeScript + Vite for Atlas, Lineage and Bread Alone, with no framework.
 
 ```bash
 pnpm install
+pnpm dev              # every app on one port: http://localhost:5170/bible/atlas/
+pnpm test:byheart
+pnpm test:bread
+pnpm build            # builds every app
+```
+
+`pnpm dev` lays the apps out as production does, at `/bible/<app>/` on one origin, so the app switcher, Night or Day, the shared translation and Atlas's data all behave as they do live. Underneath it starts each app's own Vite server on its pinned port and proxies to it, hot reload included; one already running is reused. `scripts/dev.mjs` takes the apps and ports from bible-ui's `APPS`.
+
+To work on one app alone, run its own server. The switcher then links across ports and carries Night or Day in the link:
+
+```bash
 pnpm dev:atlas        # http://localhost:5173/bible/atlas/
 pnpm dev:lineage      # http://localhost:5174/bible/lineage/
 pnpm dev:byheart      # http://localhost:5175/bible/byheart/
 pnpm dev:bread        # http://localhost:5176/bible/bread/
-pnpm test:byheart
-pnpm test:bread
-pnpm build            # builds every app
 ```
 
 ## Deployment

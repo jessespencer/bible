@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "dev": "node scripts/dev.mjs",
     "dev:atlas": "pnpm --filter atlas dev",
     "dev:lineage": "pnpm --filter lineage dev",
     "dev:byheart": "pnpm --filter byheart dev",
