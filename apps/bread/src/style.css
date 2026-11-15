@@ -348,6 +348,11 @@ kbd {
   color: var(--accent-text);
 }
 
+.topic-chip .icon--end {
+  margin-right: -3px;
+  opacity: 0.8;
+}
+
 @keyframes chip-in {
   from { opacity: 0; transform: scale(0.94); }
 }
@@ -419,6 +424,32 @@ kbd {
   flex-direction: column;
   gap: 18px;
   scroll-margin-top: 80px;
+}
+
+.results__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.results__heading {
+  min-width: 0;
+}
+
+.results__restart {
+  flex: none;
+  height: 36px;
+  padding: 0 14px;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 15px;
+  color: var(--text-dim);
+}
+
+.results__restart .icon {
+  width: 16px;
+  height: 16px;
 }
 
 .results__title {
@@ -734,6 +765,77 @@ kbd {
   text-overflow: ellipsis;
 }
 
+.need__clear {
+  display: none;
+}
+
+.need[aria-pressed="true"] {
+  background: var(--accent-fill);
+  border-color: var(--accent-border);
+}
+
+/* Once answered, the needs are a row under the composer: switch need without scrolling. */
+.bread--answered .browse {
+  margin-top: -20px;
+  /* Bleed to the page's edges so the row scrolls under them, not short of them. */
+  margin-inline: -24px;
+}
+
+.bread--answered .browse__title {
+  display: none;
+}
+
+.bread--answered .browse__grid {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 24px;
+  scrollbar-width: none;
+  scroll-padding-inline: 24px;
+  mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+}
+
+.bread--answered .browse__grid::-webkit-scrollbar {
+  display: none;
+}
+
+.bread--answered .need {
+  flex: none;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-color: var(--border-subtle);
+  border-radius: 999px;
+  transform: none;
+}
+
+.bread--answered .need__name {
+  font-family: var(--font-ui);
+  font-size: 15.5px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.bread--answered .need:hover .need__name,
+.bread--answered .need[aria-pressed="true"] .need__name {
+  color: var(--text-bright);
+}
+
+.bread--answered .need__more {
+  display: none;
+}
+
+/* A need picked alone can be let go of from here. */
+.bread--answered .browse--picked .need[aria-pressed="true"] .need__clear {
+  display: block;
+  width: 14px;
+  height: 14px;
+  margin-right: -4px;
+  color: var(--accent-text);
+}
+
 /* ─── Toast ───────────────────────────────────────────────────── */
 
 .toast {
@@ -799,6 +901,25 @@ kbd {
   .bread {
     padding: 36px 16px 72px;
     gap: 36px;
+  }
+
+  .bread--answered .browse {
+    margin-inline: -16px;
+  }
+
+  .bread--answered .browse__grid {
+    padding-inline: 16px;
+    scroll-padding-inline: 16px;
+  }
+
+  .results__restart span:not(.sr-only) {
+    display: none;
+  }
+
+  .results__restart {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
   }
 
   .composer__label {

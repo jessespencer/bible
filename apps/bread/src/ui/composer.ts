@@ -1,6 +1,6 @@
 /**
  * The composer: one field that grows with what you write. Under it, what the app is hearing,
- * as chips: a reader who means something else picks another topic before asking.
+ * as chips: a reader who means something else picks another topic before asking, or after.
  */
 
 import { hearTopics } from "../search/needProfile.ts";
@@ -31,13 +31,20 @@ export interface ComposerHandle {
   element: HTMLElement;
   value: () => string;
   steer: () => string | undefined;
-  set: (text: string, steer?: string) => void;
+  /** `fromNeed`: picked from the list of needs, so words pointing elsewhere take over. */
+  set: (text: string, steer?: string, fromNeed?: boolean) => void;
   focus: () => void;
   setBusy: (busy: boolean) => void;
 }
 
-export const createComposer = (onSubmit: (text: string, steer: string | undefined) => void): ComposerHandle => {
+export const createComposer = (
+  onSubmit: (text: string, steer: string | undefined) => void,
+  /** The reader changed the topic with a chip. */
+  onSteer: (steer: string | undefined) => void = () => {},
+): ComposerHandle => {
   let steered: string | undefined;
+  // A need picked from the list is a starting point; a chip picked after writing is a decision.
+  let steeredFromNeed = false;
 
   const form = el("form", "composer");
   form.setAttribute("role", "search");
@@ -120,10 +127,14 @@ export const createComposer = (onSubmit: (text: string, steer: string | undefine
     button.setAttribute("aria-pressed", String(kind === "steered"));
     if (kind === "steered") button.append(icon("check"));
     button.append(topicName(topic));
+    if (kind === "steered") button.append(icon("x", "icon icon--end"));
     button.title = kind === "steered" ? "Let the words decide again" : `Ask about ${topicName(topic).toLowerCase()}`;
     button.addEventListener("click", () => {
       steered = kind === "steered" ? undefined : topic;
+      steeredFromNeed = false;
       update();
+      renderHearing();
+      onSteer(steered);
     });
   };
 
@@ -131,7 +142,14 @@ export const createComposer = (onSubmit: (text: string, steer: string | undefine
     hearing.replaceChildren();
     const text = field.value.trim();
     const heard = text ? hearTopics(text).slice(0, 3) : [];
-    if (!text && !steered) return;
+    // Words that clearly mean something else outrank a need picked from the list.
+    if (steered && steeredFromNeed && heard.length && !heard.includes(steered)) {
+      steered = undefined;
+      steeredFromNeed = false;
+      showExample();
+    }
+    // A need with no words is shown by the list of needs and the field's invitation.
+    if (!text) return;
     el("span", "composer__hearing-label", hearing).textContent = heard.length || steered ? "Hearing" : "Listening…";
     const lead = steered ?? heard[0];
     if (lead) chip(lead, steered ? "steered" : "heard");
@@ -161,6 +179,7 @@ export const createComposer = (onSubmit: (text: string, steer: string | undefine
   clear.addEventListener("click", () => {
     field.value = "";
     steered = undefined;
+    steeredFromNeed = false;
     update();
     renderHearing();
     field.focus();
@@ -186,9 +205,10 @@ export const createComposer = (onSubmit: (text: string, steer: string | undefine
     element: form,
     value: () => field.value.trim(),
     steer: () => steered,
-    set: (text, steer) => {
+    set: (text, steer, fromNeed = false) => {
       field.value = text;
       steered = steer;
+      steeredFromNeed = fromNeed && Boolean(steer);
       update();
       renderHearing();
     },

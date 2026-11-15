@@ -9,8 +9,9 @@ Say what you're carrying, in plain words, and read three verses for it.
 ## Using it
 
 - **Write it the way you'd say it.** The field grows as you write. Enter sends, Shift Enter starts a new line, and `/` jumps to it from anywhere.
-- **See what it's hearing.** As you write, chips show the needs it hears, strongest first. Tap one to steer the answer toward it.
-- **Or begin with a need.** Eighteen needs, from anxiety to leadership, each one tap from three verses.
+- **See what it's hearing.** As you write, chips show the needs it hears, strongest first. Tap one to steer the answer toward it, before asking or after: the verses follow.
+- **Or begin with a need.** Eighteen needs, from anxiety to money, each one tap from three verses. Once there's an answer they sit in a row under the field, to switch without scrolling.
+- **Start over.** One tap, or Back, returns to an empty page. Words that point elsewhere take over from a need you picked.
 - **Read around it.** Each verse opens onto the verses either side of it in its chapter, with the one found highlighted.
 - **Keep it.** Copy a verse with its reference, or share it as a typeset image: the share sheet on a phone, a download elsewhere.
 - **Three more.** Draw another three for the same need, never repeating what you've seen.
