@@ -42,9 +42,9 @@ export const iconButton = (name: IconName, label: string, className: string, ico
   const button = el("button", className);
   button.type = "button";
   button.append(icon(name));
+  // Its tip, where the label isn't shown, comes from initTooltips.
   const text = el("span", iconOnly ? "sr-only" : "", button);
   text.textContent = label;
-  if (iconOnly) button.title = label;
   return button;
 };
 

@@ -28,6 +28,7 @@ Shared design system and UI components for the Bible apps — [Atlas](../../apps
 - `LINKED_TRANSLATIONS`, `readElsewhereHref(reference, version)` (from `/translations`) — the copyrighted translations a passage links out to on Bible Gateway
 - `shareView(title)` (from `/share`) — the system share sheet on touch screens, otherwise the link goes to the clipboard
 - `initSelectMenus()` (from `/select-menu`) — call once: with a mouse or trackpad, every `select.bui-select` opens our menu below the control instead of the system's, with arrow keys, type-ahead and Esc. Touch screens keep the native picker
+- `initTooltips()` (from `/tooltip`) — call once: styled tips in place of the browser's. An icon-only button or link (or one whose label is hidden on a phone) shows its accessible name; anything with a `title` shows that. Mouse, pen and keyboard focus only, never touch
 - `cssToken(name)` (from `/tokens`) — reads a design token for canvas, SVG and WebGL code, which can't use `var()`
 - `currentTheme()`, `setTheme(theme)`, `onThemeChange(callback)` (from `/theme`) — Night (`"dark"`, the default) or Day (`"light"`), saved for every app and followed across tabs. The switcher menu has the Night/Day switch. Canvas and WebGL code redraws in `onThemeChange`, which returns a function that stops listening; `cssToken` forgets its old values first
 

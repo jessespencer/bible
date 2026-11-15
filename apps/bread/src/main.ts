@@ -2,6 +2,7 @@ import "@jessespencer/bible-ui/style.css";
 import "./style.css";
 import { APPS, appHref, createHeader, loadFonts } from "@jessespencer/bible-ui";
 import { shareView } from "@jessespencer/bible-ui/share";
+import { initTooltips } from "@jessespencer/bible-ui/tooltip";
 import { createTranslationPicker } from "@jessespencer/bible-ui/translation-picker";
 import {
   DEFAULT_TRANSLATION,
@@ -45,6 +46,7 @@ const getSearch = () => (searchReady ??= loadBible(SEARCH_FILE).then((verses) =>
 // ─── Shell ───────────────────────────────────────────────────────
 
 loadFonts();
+initTooltips();
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch((err) => console.warn("Offline copy unavailable", err));
