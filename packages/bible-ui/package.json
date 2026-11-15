@@ -4,7 +4,9 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./apps": "./src/apps.ts",
@@ -17,6 +19,7 @@
     "./translations": "./src/translations.ts",
     "./translation-picker": "./src/translationPicker.ts",
     "./share": "./src/share.ts",
-    "./select-menu": "./src/selectMenu.ts"
+    "./select-menu": "./src/selectMenu.ts",
+    "./tooltip": "./src/tooltip.ts"
   }
 }

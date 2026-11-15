@@ -5,10 +5,10 @@
  * rainbow gradient bar, and a controls slot for app-specific buttons.
  */
 
-import { APPS, appHref, type AppEntry } from "./apps";
+import { APPS, appSwitchHref, type AppEntry } from "./apps";
 import { currentTheme, onThemeChange, setTheme, type Theme } from "./theme";
 
-export { APPS, appHref, type AppEntry } from "./apps";
+export { APPS, appHref, appSwitchHref, type AppEntry } from "./apps";
 
 // Each app's icon glows in its own accent, here and in the menu.
 const appIcon = (app: AppEntry | undefined, className: string): SVGElement => {
@@ -115,7 +115,11 @@ const createAppSwitcher = (currentId: string): HTMLElement => {
   for (const app of APPS) {
     const item = document.createElement("a");
     item.className = "bui-appswitch__item";
-    item.href = appHref(app);
+    item.href = appSwitchHref(app);
+    // Read again on the way out: Night or Day may have changed in this menu since it was built.
+    item.addEventListener("click", () => {
+      item.href = appSwitchHref(app);
+    });
 
     if (app.id === current?.id) {
       item.classList.add("bui-appswitch__item--current");

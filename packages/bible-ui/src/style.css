@@ -345,10 +345,18 @@ html[data-theme="light"] .bui-appswitch__item-icon {
 /* #app outranks this sheet's load order against each app's own CSS. */
 
 #app .bui-header--compact {
-  /* Each side matches the gap above and below its edge control: the 28px logo on the left, the 36px view toggle on the right */
-  padding: 10px 10px 10px 14px;
+  /* Each side matches the gap above and below its edge control: 13px round the 30px app switcher on the left,
+     10px round the 36px view toggle on the right. The top adds 2px for the rainbow line, which sits inside it. */
+  padding: 12px 10px 10px 13px;
   border-bottom: 1px solid var(--border-faint);
   z-index: 60;
+}
+
+/* One bar height in every app, whatever its controls: each line of the bar is a 36px track,
+   so a smaller control (Bread Alone's translation chip) never pulls the switcher up against the edge. */
+#app .bui-header--compact .bui-header__brand,
+#app .bui-header--compact .bui-header__controls {
+  min-height: 36px;
 }
 
 /* Equal outer columns keep the center slot in the true center of the page. */
@@ -376,7 +384,8 @@ html[data-theme="light"] .bui-appswitch__item-icon {
 
 @media (max-width: 760px) {
   #app .bui-header--compact {
-    padding: 8px 16px;
+    /* The page's 16px gutter at the sides; 2px more on top for the rainbow line */
+    padding: 10px 16px 8px;
   }
 
   #app .bui-header--compact .bui-header__row {
@@ -906,4 +915,42 @@ a:focus-visible {
   }
 
   .bui-guide__dot { display: none; }
+}
+
+/* ─── Tooltips (initTooltips, from /tooltip) ──────────────────── */
+
+.bui-tip {
+  position: fixed;
+  z-index: 1000;
+  max-width: min(280px, calc(100vw - 16px));
+  width: max-content;
+  padding: 5px 10px 6px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-pop);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.25;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 120ms, transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.bui-tip--below {
+  transform: translateY(-3px);
+}
+
+.bui-tip--on {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bui-tip {
+    transform: none;
+    transition: opacity 120ms;
+  }
 }

@@ -1,4 +1,4 @@
-import { APPS, appHref } from '@jessespencer/bible-ui/apps'
+import { APPS, appSwitchHref } from '@jessespencer/bible-ui/apps'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { HeartMark } from './Heart'
 
@@ -51,7 +51,7 @@ export const AppSwitcher = () => {
               return (
                 <a
                   key={app.id}
-                  href={appHref(app)}
+                  href={appSwitchHref(app)}
                   className={`pick-app ${here ? 'on' : ''}`}
                   aria-current={here ? 'page' : undefined}
                   style={{ '--app-accent': app.accent } as CSSProperties}

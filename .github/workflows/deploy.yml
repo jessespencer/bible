@@ -30,13 +30,16 @@ jobs:
       - run: pnpm build:lineage
       - run: pnpm test:byheart
       - run: pnpm build:byheart
+      - run: pnpm test:bread
+      - run: pnpm build:bread
       # Served at /bible/: each app in its own folder, and the root forwards to Atlas.
       - name: Assemble Pages output
         run: |
-          mkdir -p dist/atlas dist/lineage dist/byheart
+          mkdir -p dist/atlas dist/lineage dist/byheart dist/bread
           cp -r apps/atlas/dist/. dist/atlas/
           cp -r apps/lineage/dist/. dist/lineage/
           cp -r apps/byheart/dist/. dist/byheart/
+          cp -r apps/bread/dist/. dist/bread/
           cp pages/index.html dist/index.html
       - uses: actions/upload-pages-artifact@v3
         with:

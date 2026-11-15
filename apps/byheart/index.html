@@ -11,6 +11,8 @@
     <title>By Heart</title>
     <!-- Day or Night before first paint. The choice is bible-ui's `bui-theme`, shared with
          Atlas and Lineage; until one is made, By Heart follows the system. -->
+    <!-- Dev only: a switcher link from another port carries Night or Day (bible-ui's appSwitchHref). -->
+    <script>try { var bp = new URLSearchParams(location.search), bt = bp.get('bui-theme'); if (bt === 'light' || bt === 'dark') { localStorage.setItem('bui-theme', bt); bp.delete('bui-theme'); var bq = bp.toString(); history.replaceState(null, '', location.pathname + (bq ? '?' + bq : '') + location.hash); } } catch (e) {}</script>
     <script>
       try {
         // By Heart's own setting from before the apps shared one.
@@ -23,6 +25,8 @@
         document.documentElement.dataset.theme = 'light'
       else document.querySelector('meta[name="theme-color"]').content = '#020611'
     </script>
+    <!-- The paper itself before styles.css arrives, so neither theme flashes the browser's white -->
+    <style>html { background: #020611; color-scheme: dark; } html[data-theme="light"] { background: #f5f0e6; color-scheme: light; }</style>
   </head>
   <body>
     <div id="root"></div>

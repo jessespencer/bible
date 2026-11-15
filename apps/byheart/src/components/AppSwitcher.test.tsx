@@ -19,9 +19,11 @@ describe('AppSwitcher', () => {
       expect.stringContaining('Atlas'),
       expect.stringContaining('Lineage'),
       expect.stringContaining('By Heart'),
+      expect.stringContaining('Bread Alone'),
     ])
     expect(screen.getByRole('link', { name: /Atlas/ })).toHaveAttribute('href', expect.stringContaining('/bible/atlas/'))
     expect(screen.getByRole('link', { name: /Lineage/ })).toHaveAttribute('href', expect.stringContaining('/bible/lineage/'))
+    expect(screen.getByRole('link', { name: /Bread Alone/ })).toHaveAttribute('href', expect.stringContaining('/bible/bread/'))
   })
 
   it('marks By Heart as the app you are in', async () => {
