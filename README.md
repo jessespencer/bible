@@ -70,7 +70,7 @@ Type something like "I'm anxious about my job interview" or "my dad just died" a
 Every app has a mark of its own: Atlas's rainbow of arcs, Lineage's branching family line, By Heart's heart, and Bread Alone's ear of wheat. The mark sits beside each app's title, and tapping it opens the **app switcher**: every app with a line on what each is for. In Atlas, Lineage and Bread Alone a Night and Day switch sits at its foot.
 
 - **One tap across.** Pick an app and it opens in the same tab.
-- **Each app in its own colour.** Starlight for Atlas, candlelight for Lineage, Ember for By Heart, Olive for Bread Alone, each deepened for paper by day.
+- **Each app in its own colour.** Starlight for Atlas, candlelight for Lineage, Ember for By Heart, Crust for Bread Alone, each deepened for paper by day.
 - **Night or Day follows you** from app to app. By Heart follows your system until you choose.
 - **One place to add an app.** The list lives in bible-ui's `APPS`, so a new app appears in every switcher at once.
 

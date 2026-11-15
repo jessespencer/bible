@@ -37,7 +37,7 @@ export const drawVerseImage = async (text: string, reference: string): Promise<B
   const surface = cssToken("--bg-surface") || "#050C1E";
   const ink = cssToken("--text-bright") || "#F6F1E6";
   const muted = cssToken("--text-muted") || "#7A84A3";
-  const accent = `rgb(${cssToken("--accent-rgb") || "176, 212, 140"})`;
+  const accent = `rgb(${cssToken("--accent-rgb") || "224, 186, 140"})`;
 
   const sky = ctx.createLinearGradient(0, 0, 0, H);
   sky.addColorStop(0, surface);

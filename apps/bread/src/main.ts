@@ -138,6 +138,15 @@ for (const [key, topic] of Object.entries(topics)) {
   needButtons.set(key, button);
 }
 
+// The row fades only at an end with more needs past it.
+const fadeRow = () => {
+  const end = grid.scrollWidth - grid.clientWidth;
+  grid.classList.toggle("browse__grid--more-before", grid.scrollLeft > 1);
+  grid.classList.toggle("browse__grid--more-after", grid.scrollLeft < end - 1);
+};
+grid.addEventListener("scroll", fadeRow, { passive: true });
+addEventListener("resize", fadeRow);
+
 const showNeed = (topic: string | undefined) => {
   browse.classList.toggle("browse--picked", !query);
   for (const [key, button] of needButtons) {
@@ -152,6 +161,7 @@ const showNeed = (topic: string | undefined) => {
     const chip = lit.getBoundingClientRect();
     grid.scrollLeft += chip.left - row.left - (row.width - chip.width) / 2;
   }
+  fadeRow();
 };
 
 // ─── State: the need and what has been shown for it ──────────────

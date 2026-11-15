@@ -73,9 +73,9 @@ export const APPS: AppEntry[] = [
       '<path d="M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"/>' +
       '<path d="M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"/>' +
       '<path d="M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"/>',
-    // Olive, and by day a deep leaf green
-    accent: "176, 212, 140",
-    accentLight: "66, 104, 38",
+    // Crust, a baked wheat tan, and by day a toasted brown
+    accent: "224, 186, 140",
+    accentLight: "122, 74, 38",
   },
 ];
 

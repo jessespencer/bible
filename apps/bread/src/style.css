@@ -2,13 +2,14 @@
    Bread Alone (base tokens come from @jessespencer/bible-ui)
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Bread Alone's star: Olive. html:root outranks bible-ui's :root, whichever loads last. */
+/* Bread Alone's colour: Crust, a baked wheat tan, kept clear of Lineage's amber and By Heart's
+   coral. html:root outranks bible-ui's :root, whichever loads last. */
 html:root {
-  --accent-rgb:    176, 212, 140;
-  --accent-bright: #E2F2CF;
-  --accent-fill:   #1E2E16;
-  --night-accent-rgb: 176, 212, 140;
-  --on-accent:     #0B1406;
+  --accent-rgb:    224, 186, 140;
+  --accent-bright: #F3DFC4;
+  --accent-fill:   #2A2118;
+  --night-accent-rgb: 224, 186, 140;
+  --on-accent:     #1C130A;
   /* Motion, as in 24-hours: three durations on one curve, and a spring for what settles. */
   --ease-out:      cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-spring:   cubic-bezier(0.34, 1.4, 0.64, 1);
@@ -17,12 +18,12 @@ html:root {
   --dur-3:         420ms;
 }
 
-/* By day, a deep leaf green */
+/* By day, a toasted brown */
 html[data-theme="light"]:root {
-  --accent-rgb:    66, 104, 38;
-  --accent-bright: #2C4A16;
-  --accent-fill:   #E1E6CF;
-  --on-accent:     #F7F9F1;
+  --accent-rgb:    122, 74, 38;
+  --accent-bright: #5A3418;
+  --accent-fill:   #EADBC6;
+  --on-accent:     #FBF6EE;
 }
 
 *,
@@ -771,8 +772,6 @@ kbd {
 /* Once answered, the needs are a row under the composer: switch need without scrolling. */
 .bread--answered .browse {
   margin-top: -20px;
-  /* Bleed to the page's edges so the row scrolls under them, not short of them. */
-  margin-inline: -24px;
 }
 
 .bread--answered .browse__title {
@@ -783,10 +782,20 @@ kbd {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding: 2px 24px;
+  padding: 2px 0;
   scrollbar-width: none;
-  scroll-padding-inline: 24px;
-  mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+  /* Inside the column, fading only on a side with more to scroll to. */
+  --fade-start: 0px;
+  --fade-end: 0px;
+  mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+}
+
+.bread--answered .browse__grid--more-before {
+  --fade-start: 32px;
+}
+
+.bread--answered .browse__grid--more-after {
+  --fade-end: 32px;
 }
 
 .bread--answered .browse__grid::-webkit-scrollbar {
@@ -931,15 +940,6 @@ kbd {
   .bread {
     padding: 36px 16px 72px;
     gap: 36px;
-  }
-
-  .bread--answered .browse {
-    margin-inline: -16px;
-  }
-
-  .bread--answered .browse__grid {
-    padding-inline: 16px;
-    scroll-padding-inline: 16px;
   }
 
   .results__restart span:not(.sr-only) {
