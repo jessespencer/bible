@@ -25,6 +25,8 @@
         document.documentElement.dataset.theme = 'light'
       else document.querySelector('meta[name="theme-color"]').content = '#020611'
     </script>
+    <!-- The paper itself before styles.css arrives, so neither theme flashes the browser's white -->
+    <style>html { background: #020611; color-scheme: dark; } html[data-theme="light"] { background: #f5f0e6; color-scheme: light; }</style>
   </head>
   <body>
     <div id="root"></div>
