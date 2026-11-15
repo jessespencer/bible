@@ -23,8 +23,6 @@ const EXAMPLES = [
   "We can't make rent this month",
 ];
 
-const STARTERS = ["I'm anxious about", "I'm grieving", "I can't forgive", "I feel alone since", "I need wisdom about", "I'm thankful for"];
-
 const MAX_LENGTH = 500;
 
 export interface ComposerHandle {
@@ -78,22 +76,10 @@ export const createComposer = (
   const hearing = el("div", "composer__hearing", form);
   hearing.setAttribute("aria-live", "polite");
 
-  const hint = el("p", "composer__hint", form);
+  // For screen readers; the send button and the cycling examples show the rest.
+  const hint = el("p", "sr-only", form);
   hint.id = "need-hint";
-  hint.innerHTML = "<kbd>Enter</kbd> to find verses · <kbd>Shift</kbd> <kbd>Enter</kbd> for a new line";
-
-  const starters = el("div", "composer__starters", form);
-  for (const starter of STARTERS) {
-    const chip = el("button", "starter", starters);
-    chip.type = "button";
-    chip.textContent = `${starter}…`;
-    chip.addEventListener("click", () => {
-      field.value = `${starter} `;
-      update();
-      field.focus();
-      field.setSelectionRange(field.value.length, field.value.length);
-    });
-  }
+  hint.textContent = "Enter finds verses. Shift Enter starts a new line.";
 
   // ─── Behaviour ────────────────────────────────────────────────
 

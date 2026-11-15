@@ -115,6 +115,8 @@ browse.setAttribute("aria-label", "Needs");
 el("h2", "browse__title", browse).textContent = "Or begin with a need";
 const grid = el("div", "browse__grid", browse);
 const needButtons = new Map<string, HTMLButtonElement>();
+// "Worry · Fear": shown as each need's tooltip.
+const otherNames = new Map<string, string>();
 for (const [key, topic] of Object.entries(topics)) {
   const button = el("button", "need", grid);
   button.type = "button";
@@ -122,6 +124,7 @@ for (const [key, topic] of Object.entries(topics)) {
   el("span", "need__name", button).textContent = topicName(key);
   const rest = topic.label.split(" / ").slice(1).join(" · ");
   if (rest) el("span", "need__more", button).textContent = rest;
+  otherNames.set(key, rest);
   button.append(icon("x", "icon need__clear"));
   button.addEventListener("click", () => {
     // The need being shown: picked alone, tapping it again lets go of it; heard in the reader's
@@ -135,6 +138,7 @@ for (const [key, topic] of Object.entries(topics)) {
     composer.set("", key, true);
     void run();
   });
+  if (rest) button.title = rest;
   needButtons.set(key, button);
 }
 
@@ -152,7 +156,7 @@ const showNeed = (topic: string | undefined) => {
   for (const [key, button] of needButtons) {
     const on = key === topic;
     button.setAttribute("aria-pressed", String(on));
-    button.title = on && !query ? `Let go of ${topicName(key).toLowerCase()}` : "";
+    button.title = on && !query ? `Let go of ${topicName(key).toLowerCase()}` : (otherNames.get(key) ?? "");
   }
   // Bring it into the row's view without moving the page.
   const lit = needButtons.get(topic ?? "");
