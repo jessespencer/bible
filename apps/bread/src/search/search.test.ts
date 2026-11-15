@@ -90,8 +90,11 @@ describe("finding verses for a need", () => {
     expect(parseNeedProfile("how do I trust God when I lost my job").primaryTopic).not.toBe("grief");
   });
 
-  it("answers a need outside every topic from its own words", () => {
-    expect(find("I want to be more generous with money")).toContain("Proverbs 22:9");
+  it("meets money trouble with provision, not a warning", () => {
+    expect(parseNeedProfile("We can't make rent this month").primaryTopic).toBe("money");
+    const found = find("We can't make rent this month");
+    expect(found).toContain("Philippians 4:19");
+    expect(found).not.toContain("1 Timothy 6:10");
   });
 
   it("keeps showing others on the topic's ground, not stray keyword matches", () => {

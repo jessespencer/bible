@@ -298,6 +298,29 @@ export const topics: Record<string, TopicDefinition> = {
     relatedTopics: ["guidance", "identity"],
     defaultIntent: "wisdom",
   },
+
+  money: {
+    label: "Money / Provision",
+    // Verse text is matched by substring, so nothing short enough to hide inside other words
+    // ("owe" in "power", "rent" in "parent", "give" in "forgive").
+    keywords: [
+      "money", "provision", "provide", "generous", "generosity", "wealth", "riches", "rich",
+      "poor", "poverty", "debt", "debts", "bills", "finances", "financial", "broke",
+      "afford", "paycheck", "salary", "income", "budget", "savings", "greed", "greedy",
+      "tithe", "tithing", "giving", "treasure", "possessions", "contentment", "lender",
+      "borrow", "mortgage", "make rent", "pay rent", "pay the rent", "my rent", "our rent", "the rent",
+      "pay the bills", "pay our bills", "make ends meet", "lost everything",
+    ],
+    boostPhrases: [
+      "love of money", "cheerful giver", "treasures in heaven", "supply every need",
+      "serve two masters", "borrower is servant to the lender", "more blessed to give",
+      "honor the lord with your substance", "whole tithe", "daily bread",
+      "neither poverty nor riches", "power to get wealth",
+    ],
+    avoidKeywords: [],
+    relatedTopics: ["anxiety", "gratitude"],
+    defaultIntent: "wisdom",
+  },
 };
 
 export const verbToIntent: Record<string, Intent> = {

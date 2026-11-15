@@ -20,6 +20,7 @@ const EXAMPLES = [
   "We just found out about the diagnosis",
   "I don't know whether to take the new job",
   "I'm so tired of fighting the same temptation",
+  "We can't make rent this month",
 ];
 
 const STARTERS = ["I'm anxious about", "I'm grieving", "I can't forgive", "I feel alone since", "I need wisdom about", "I'm thankful for"];

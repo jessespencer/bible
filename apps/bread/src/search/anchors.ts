@@ -310,6 +310,34 @@ export const anchorVerses: Record<string, string[]> = {
     "1 Peter 5:3",
   ],
 
+  // Provision first: someone short of rent shouldn't be met with "the love of money". The
+  // warnings (1 Timothy 6:10, Ecclesiastes 5:10) still come up when the words point there.
+  money: [
+    "Matthew 6:31",
+    "Psalm 23:1",
+    "Matthew 6:19",
+    "Matthew 6:21",
+    "Matthew 6:24",
+    "Matthew 6:33",
+    "Philippians 4:19",
+    "Philippians 4:12",
+    "Hebrews 13:5",
+    "1 Timothy 6:6",
+    "1 Timothy 6:17",
+    "2 Corinthians 9:7",
+    "2 Corinthians 9:8",
+    "Proverbs 3:9",
+    "Proverbs 11:25",
+    "Proverbs 22:7",
+    "Proverbs 30:8",
+    "Malachi 3:10",
+    "Luke 12:15",
+    "Luke 6:38",
+    "Acts 20:35",
+    "Deuteronomy 8:18",
+    "Psalm 37:25",
+  ],
+
   general: [
     "John 3:16",
     "Romans 8:28",
