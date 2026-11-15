@@ -67,7 +67,7 @@ const card = ({ text, translation, atlasHref }: CardsConfig, verse: number, posi
   const atlas = el("a", "card__action", actions);
   atlas.href = atlasHref(verse);
   atlas.title = "Cross-references in Atlas";
-  atlas.append(icon("arrowUpRight"));
+  atlas.append(icon("atlas"));
   el("span", "sr-only", atlas).textContent = "Cross-references in Atlas";
   actions.prepend(context, copyButton, imageButton);
 
