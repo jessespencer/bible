@@ -40,5 +40,12 @@ Work agreed but not done yet, roughly in order. Tick items off in the commit tha
 - [x] Share Night/Day between By Heart and Atlas and Lineage (By Heart still follows the system until a choice is saved)
 - [x] Close by-heart PR 7 and archive the by-heart repo
 
+## Bread Alone
+- [x] Rebuild bread-alone's search as `apps/bread`, in the browser on Atlas's text
+- [ ] Use Atlas's cross-references to widen what a topic finds, so needs outside the 17 topics stop falling back to the same general verses
+- [ ] Topics for the gaps found so far: money, the Holy Spirit, feeling far from God, honesty and confession
+- [ ] A "Learn this by heart" link once By Heart can open at a verse
+- [ ] Build the search index at build time if building it on first visit feels slow on a phone
+
 ## Skipped
 - Greek and Hebrew word links

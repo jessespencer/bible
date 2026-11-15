@@ -7,10 +7,13 @@
     "dev:atlas": "pnpm --filter atlas dev",
     "dev:lineage": "pnpm --filter lineage dev",
     "dev:byheart": "pnpm --filter byheart dev",
+    "dev:bread": "pnpm --filter bread dev",
     "build": "pnpm -r build",
     "build:atlas": "pnpm --filter atlas build",
     "build:lineage": "pnpm --filter lineage build",
     "build:byheart": "pnpm --filter byheart build",
-    "test:byheart": "pnpm --filter byheart test"
+    "build:bread": "pnpm --filter bread build",
+    "test:byheart": "pnpm --filter byheart test",
+    "test:bread": "pnpm --filter bread test"
   }
 }

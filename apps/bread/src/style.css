@@ -1,0 +1,292 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Bread Alone (base tokens come from @jessespencer/bible-ui)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Bread Alone's star: Olive. html:root outranks bible-ui's :root, whichever loads last. */
+html:root {
+  --accent-rgb:    176, 212, 140;
+  --accent-bright: #E2F2CF;
+  --accent-fill:   #1E2E16;
+  --night-accent-rgb: 176, 212, 140;
+}
+
+/* By day, a deep leaf green */
+html[data-theme="light"]:root {
+  --accent-rgb:    66, 104, 38;
+  --accent-bright: #2C4A16;
+  --accent-fill:   #E1E6CF;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+  font-family: var(--font-ui);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+#app .bui-header--compact {
+  position: sticky;
+  top: 0;
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+}
+
+/* Nothing in the center slot here, so on phones the brand and the translation share one row. */
+@media (max-width: 760px) {
+  #app .bui-header--compact .bui-header__brand {
+    flex: 1 1 auto;
+  }
+
+  #app .bui-header--compact .bui-header__center {
+    display: none;
+  }
+}
+
+/* ─── Page: one reading column ────────────────────────────────── */
+
+.bread {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 56px 24px 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.bread__intro {
+  text-align: center;
+}
+
+.bread__epigraph {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  text-wrap: balance;
+}
+
+.bread__epigraph-ref {
+  margin-top: 8px;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+/* ─── The question ────────────────────────────────────────────── */
+
+.bread__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bread__label {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1.2;
+  color: var(--text-bright);
+  text-align: center;
+}
+
+.bread__row {
+  display: flex;
+  gap: 8px;
+}
+
+.bread__input {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--fill-subtle);
+  color: var(--text-bright);
+  font-family: var(--font-ui);
+  font-size: 18px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.bread__input::placeholder {
+  color: var(--text-muted);
+}
+
+.bread__input:focus {
+  outline: none;
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.bread__submit,
+.bread__more {
+  height: 48px;
+  padding: 0 20px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-lg);
+  background: var(--accent-fill);
+  color: var(--text-bright);
+  font-family: var(--font-ui);
+  font-size: 17px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: box-shadow 0.15s;
+}
+
+.bread__submit:hover,
+.bread__more:hover {
+  box-shadow: var(--shadow-raised);
+}
+
+.bread__submit:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.bread__hints {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.bread__hint {
+  padding: 4px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.bread__hint:hover {
+  background: var(--fill-hover);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+}
+
+/* ─── The answer: three verses ────────────────────────────────── */
+
+.bread__results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bread__results:empty {
+  display: none;
+}
+
+.bread__topic {
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  font-size: 15px;
+  color: var(--accent-text);
+  text-align: center;
+}
+
+.bread__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bread__card {
+  padding: 22px 24px 18px;
+  border: 1px solid var(--border-faint);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+}
+
+.bread__verse {
+  font-size: 21px;
+  line-height: 1.55;
+  color: var(--text-bright);
+  text-wrap: pretty;
+}
+
+.bread__card-foot {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.bread__ref {
+  font-style: normal;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  font-size: 16px;
+  color: var(--accent-text);
+}
+
+.bread__link {
+  font-size: 15px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+
+.bread__link:hover {
+  color: var(--text-secondary);
+}
+
+.bread__more {
+  align-self: center;
+  margin-top: 8px;
+  background: transparent;
+}
+
+.bread__error {
+  text-align: center;
+  color: var(--text-dim);
+}
+
+@media (max-width: 560px) {
+  .bread {
+    padding: 36px 16px 72px;
+    gap: 32px;
+  }
+
+  .bread__label {
+    font-size: 25px;
+  }
+
+  .bread__row {
+    flex-direction: column;
+  }
+
+  .bread__verse {
+    font-size: 19px;
+  }
+
+  .bread__card {
+    padding: 18px 18px 14px;
+  }
+}

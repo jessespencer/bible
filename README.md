@@ -1,10 +1,10 @@
 # bible
 
-> *Three ways into one book: see how it speaks to itself, who lived it, and carry it with you.*
+> *Four ways into one book: see how it speaks to itself, who lived it, carry it with you, and find the word for today.*
 
-A family of free, open-source apps for reading and studying the Bible. Each one takes a single idea and gives it a whole screen. Atlas and Lineage share one design system, so moving between them feels like turning pages in the same book, and one app switcher links all three.
+A family of free, open-source apps for reading and studying the Bible. Each one takes a single idea and gives it a whole screen. Atlas and Lineage share one design system, so moving between them feels like turning pages in the same book, and one app switcher links all four.
 
-**▶ [Open Atlas](https://jessespencer.dev/bible/atlas/)** · **[Open Lineage](https://jessespencer.dev/bible/lineage/)** · **[Open By Heart](https://jessespencer.dev/bible/byheart/)**
+**▶ [Open Atlas](https://jessespencer.dev/bible/atlas/)** · **[Open Lineage](https://jessespencer.dev/bible/lineage/)** · **[Open By Heart](https://jessespencer.dev/bible/byheart/)** · **[Open Bread Alone](https://jessespencer.dev/bible/bread/)**
 
 ## The apps
 
@@ -48,14 +48,27 @@ By Heart turns memorizing into reading. Each verse climbs a ladder of eight step
 
 **▶ [Open By Heart](https://jessespencer.dev/bible/byheart/)** · [More about By Heart →](apps/byheart/README.md)
 
+### 🌾 Bread Alone: three verses for what you're carrying
+
+*Say it the way you'd say it to a friend.*
+
+Type something like "I'm anxious about my job interview" or "my dad just died" and read three verses for it, each from a different chapter. No AI model and nothing sent anywhere: the search runs in your browser, guided by 17 topics with hand-picked verses.
+
+- **Ask in your own words.** It finds the topic, sets aside the filler, and searches the rest.
+- **Show me others.** Draw three more for the same need, never repeating what you've seen.
+- **Follow a verse outward.** Each one opens in Atlas with its cross-references.
+- **Read in any bundled translation.** The search reads the WEB; results show in the one you pick.
+
+**▶ [Open Bread Alone](https://jessespencer.dev/bible/bread/)** · [More about Bread Alone →](apps/bread/README.md)
+
 ## Moving between them
 
 <img src="packages/bible-ui/docs/app-switcher.png" alt="The app switcher open in Atlas, listing Atlas, Lineage and By Heart with their icons and taglines, above a Night and Day switch" width="370" align="right">
 
-Every app has a mark of its own: Atlas's rainbow of arcs, Lineage's branching family line, and By Heart's heart. The mark sits beside each app's title, and tapping it opens the **app switcher**: all three apps with a line on what each is for. In Atlas and Lineage a Night and Day switch sits at its foot.
+Every app has a mark of its own: Atlas's rainbow of arcs, Lineage's branching family line, By Heart's heart, and Bread Alone's ear of wheat. The mark sits beside each app's title, and tapping it opens the **app switcher**: every app with a line on what each is for. In Atlas and Lineage a Night and Day switch sits at its foot.
 
 - **One tap across.** Pick an app and it opens in the same tab.
-- **Each app in its own colour.** Starlight for Atlas, candlelight for Lineage, Ember for By Heart, each deepened for paper by day.
+- **Each app in its own colour.** Starlight for Atlas, candlelight for Lineage, Ember for By Heart, Olive for Bread Alone, each deepened for paper by day.
 - **Night or Day follows you** from Atlas to Lineage. By Heart keeps its own for now.
 - **One place to add an app.** The list lives in bible-ui's `APPS`, so a new app appears in every switcher at once.
 
@@ -78,13 +91,14 @@ By Heart draws the same list in its own type: its wordmark opens the apps on a s
 | `apps/atlas` | `atlas` | Atlas — interactive arc visualization of all 344,799 Bible cross-references, with verse text. |
 | `apps/lineage` | `lineage` | Lineage — timeline of 157 biblical lives from Adam to the resurrection, with verse text. |
 | `apps/byheart` | `byheart` | By Heart — typographic app for memorizing Scripture, up to whole books. |
+| `apps/bread` | `bread` | Bread Alone — three verses for a need in plain words, searched in the browser. |
 | `packages/bible-ui` | `@jessespencer/bible-ui` | Shared header, app switcher, bottom sheet, verse numbering, fonts, and design tokens. |
 
 A new app joins as another `apps/<name>` folder and an entry in bible-ui's `APPS`, which puts it in the app switcher.
 
 ## Stack
 
-Vanilla TypeScript + Vite for Atlas and Lineage, with no framework. By Heart is React + Vite, tested with Vitest, and takes only bible-ui's app list, from the side-effect-free `@jessespencer/bible-ui/apps`. The shared `bible-ui` package exports raw TS/CSS — consumers import directly with no build step.
+Vanilla TypeScript + Vite for Atlas, Lineage and Bread Alone, with no framework. Bread Alone searches with MiniSearch and is tested with Vitest. By Heart is React + Vite, tested with Vitest, and takes only bible-ui's app list, from the side-effect-free `@jessespencer/bible-ui/apps`. The shared `bible-ui` package exports raw TS/CSS — consumers import directly with no build step.
 
 ## Development
 
@@ -93,19 +107,22 @@ pnpm install
 pnpm dev:atlas        # http://localhost:5173/bible/atlas/
 pnpm dev:lineage      # http://localhost:5174/bible/lineage/
 pnpm dev:byheart      # http://localhost:5175/bible/byheart/
+pnpm dev:bread        # http://localhost:5176/bible/bread/
 pnpm test:byheart
+pnpm test:bread
 pnpm build            # builds every app
 ```
 
 ## Deployment
 
-All three apps are deployed together to GitHub Pages via `.github/workflows/deploy.yml`:
+All four apps are deployed together to GitHub Pages via `.github/workflows/deploy.yml`:
 
 - Atlas → `https://jessespencer.dev/bible/atlas/`
 - Lineage → `https://jessespencer.dev/bible/lineage/`
 - By Heart → `https://jessespencer.dev/bible/byheart/`
+- Bread Alone → `https://jessespencer.dev/bible/bread/`
 
-The workflow runs By Heart's tests, builds each app into its own folder of a combined `dist/`, and `pages/index.html` sends `/bible/` on to Atlas. Lineage has no data of its own to ship: it reads Atlas's `data/` from `../atlas/`.
+The workflow runs By Heart's and Bread Alone's tests, builds each app into its own folder of a combined `dist/`, and `pages/index.html` sends `/bible/` on to Atlas. Lineage and Bread Alone have no Bible text of their own to ship: they read Atlas's `data/` from `../atlas/`.
 
 The apps used to live at `/rainbow/` and `/rainbow/timeline/`. Those addresses redirect here from the `jessespencer.github.io` repo, keeping any `?ref=` or `?figure=`.
 
@@ -120,7 +137,7 @@ Each app's README gives the full sources and any changes made to them.
 
 ## History
 
-The repo was called `rainbow`, after Atlas's working name, until the family took the name `bible`. It absorbed three previously separate repositories: `chronos` became `apps/lineage/`, `bible-ui` became `packages/bible-ui/`, and the private `by-heart` became `apps/byheart/`. By Heart came in with `git subtree`, so its history is here. The other two came in as copies, so their earlier history wasn't kept.
+The repo was called `rainbow`, after Atlas's working name, until the family took the name `bible`. It absorbed four previously separate repositories: `chronos` became `apps/lineage/`, `bible-ui` became `packages/bible-ui/`, the private `by-heart` became `apps/byheart/`, and `bread-alone`'s search was rebuilt as `apps/bread/`, without its Next.js server or its own copies of the Bible. By Heart came in with `git subtree`, so its history is here. The others came in as copies, so their earlier history wasn't kept.
 
 ## License
 
