@@ -9,7 +9,12 @@ html:root {
   --accent-fill:   #1E2E16;
   --night-accent-rgb: 176, 212, 140;
   --on-accent:     #0B1406;
-  --ease-out:      cubic-bezier(0.2, 0.7, 0.2, 1);
+  /* Motion, as in 24-hours: three durations on one curve, and a spring for what settles. */
+  --ease-out:      cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring:   cubic-bezier(0.34, 1.4, 0.64, 1);
+  --dur-1:         120ms;
+  --dur-2:         220ms;
+  --dur-3:         420ms;
 }
 
 /* By day, a deep leaf green */
@@ -234,7 +239,6 @@ kbd {
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s;
 }
 
 .composer__clear {
@@ -266,8 +270,7 @@ kbd {
 }
 
 .composer__send:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px -4px rgba(var(--accent-rgb), 0.6);
+  background: var(--accent-bright);
 }
 
 .composer__send:disabled {
@@ -322,7 +325,6 @@ kbd {
   font-size: 15px;
   cursor: pointer;
   animation: chip-in 0.22s var(--ease-out) both;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .topic-chip:first-of-type {
@@ -404,7 +406,6 @@ kbd {
   font-family: var(--font-ui);
   font-size: 16px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .starter:hover {
@@ -499,14 +500,10 @@ kbd {
   background: linear-gradient(180deg, var(--bg-surface), var(--bg-base) 140%);
   animation: rise 0.5s var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 80ms);
-  transition: border-color 0.2s, box-shadow 0.25s, transform 0.25s var(--ease-out);
+  transition: border-color var(--dur-2) var(--ease-out);
 }
 
-.card:hover {
-  border-color: var(--border-default);
-  box-shadow: 0 18px 40px -24px rgba(var(--accent-rgb), 0.35);
-}
-
+/* A card stays still under the pointer; what answers is the control you touch. */
 .card--open {
   border-color: var(--accent-border);
 }
@@ -628,7 +625,6 @@ kbd {
   font-size: 15px;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
 }
 
 .card__action:hover,
@@ -688,7 +684,6 @@ kbd {
   font-family: var(--font-ui);
   font-size: 16px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
 .pill-button:hover {
@@ -743,7 +738,6 @@ kbd {
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.15s var(--ease-out);
 }
 
 .need:hover {
@@ -808,7 +802,6 @@ kbd {
   padding: 0 14px;
   border-color: var(--border-subtle);
   border-radius: 999px;
-  transform: none;
 }
 
 .bread--answered .need__name {
@@ -863,18 +856,55 @@ kbd {
 
 /* ─── Motion and phones ───────────────────────────────────────── */
 
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .card:hover {
-    transform: translateY(-2px);
-  }
+/* A tactile press on everything you can tap, and a small pop on what you pick. */
+.composer__send,
+.composer__clear,
+.topic-chip,
+.starter,
+.need,
+.pill-button,
+.card__action {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: var(--dur-1);
+  transition-timing-function: var(--ease-out);
+}
 
-  .need:hover {
-    transform: translateY(-1px);
-  }
+.composer__send:active:not(:disabled),
+.composer__clear:active,
+.topic-chip:active,
+.starter:active,
+.need:active,
+.pill-button:active,
+.card__action:active {
+  transform: scale(0.96);
+}
+
+.need[aria-pressed="true"],
+.topic-chip--steered,
+.card__action .icon--done {
+  animation: pop var(--dur-2) var(--ease-out);
+}
+
+@keyframes pop {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  60% { transform: scale(1.03); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 /* Nothing moves; everything still arrives, by a short fade at most. */
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 0ms;
+    --dur-2: 0ms;
+    --dur-3: 0ms;
+  }
+
+  .need[aria-pressed="true"],
+  .topic-chip--steered,
+  .card__action .icon--done {
+    animation: none;
+  }
+
   .card,
   .topic-chip {
     animation: fade 0.15s both;

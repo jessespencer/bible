@@ -79,9 +79,15 @@ const card = ({ text, translation, atlasHref }: CardsConfig, verse: number, posi
     context.querySelector("span")!.textContent = open ? "Just this verse" : "Read around it";
   });
 
+  // Copied: the icon turns to a check for a moment, as well as the note at the foot.
+  let copied = 0;
   copyButton.addEventListener("click", async () => {
     const done = await copy(`${text[verse] ?? ""}\n— ${reference} (${translation.abbr})`);
     toast(done ? `Copied ${reference}` : "Couldn't reach the clipboard");
+    if (!done) return;
+    copyButton.firstElementChild!.replaceWith(icon("check", "icon icon--done"));
+    clearTimeout(copied);
+    copied = window.setTimeout(() => copyButton.firstElementChild!.replaceWith(icon("copy")), 1600);
   });
 
   imageButton.addEventListener("click", async () => {

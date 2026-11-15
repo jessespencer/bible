@@ -7,4 +7,4 @@ Shown to readers as **Bread Alone**, served at `/bible/bread/`. Vanilla TypeScri
 - **Cross-references rank the answers.** `src/search/links.json` holds each verse's prominence (how much readers link it) and each topic's verses most linked to its anchors, built from Atlas's `links.bin` by `pnpm --filter bread build:links`. Rerun it when the anchors change; `search.test.ts` fails while it's stale.
 - **URL is state:** `?q=`, `?topic=` (a need the reader steered to or picked) and `?tr=`.
 - `src/search/` has no DOM code; `pnpm test:bread` runs it against the real WEB text. `src/ui/` is the page: the composer, the verse cards and the share image.
-- **Motion** respects `prefers-reduced-motion`: cards and chips fade instead of rising, and the composer's examples stop cycling.
+- **Motion** follows 24-hours: `--dur-1/2/3` (120/220/420ms) on `--ease-out`, a 0.96 press on anything tappable, a pop on what's picked, and no hover lift on cards. It respects `prefers-reduced-motion`: the durations go to zero, cards and chips fade instead of rising, and the composer's examples stop cycling.
