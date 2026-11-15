@@ -74,8 +74,8 @@ const main = el("main", "bread", app);
 const hero = el("section", "hero", main);
 const epigraph = el("figure", "epigraph", hero);
 el("blockquote", "epigraph__text", epigraph).textContent =
-  "Man shall not live by bread alone, but by every word that proceedeth out of the mouth of God.";
-el("figcaption", "epigraph__ref", epigraph).textContent = "Matthew 4:4 · KJV";
+  "Man shall not live by bread alone, but by every word that comes from the mouth of God.";
+el("figcaption", "epigraph__ref", epigraph).textContent = "Matthew 4:4 · ESV";
 
 const composer = createComposer(
   (text, steer) => {
