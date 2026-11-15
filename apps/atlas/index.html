@@ -9,6 +9,8 @@
   <meta name="theme-color" content="#020611" />
   <title>Atlas — Bible Cross-Reference Visualization</title>
   <!-- Day or Night before first paint (bible-ui's theme.ts), so Day never flashes dark -->
+  <!-- Dev only: a switcher link from another port carries Night or Day (bible-ui's appSwitchHref). -->
+  <script>try { var bp = new URLSearchParams(location.search), bt = bp.get('bui-theme'); if (bt === 'light' || bt === 'dark') { localStorage.setItem('bui-theme', bt); bp.delete('bui-theme'); var bq = bp.toString(); history.replaceState(null, '', location.pathname + (bq ? '?' + bq : '') + location.hash); } } catch (e) {}</script>
   <script>try { if (localStorage.getItem('bui-theme') === 'light') { document.documentElement.dataset.theme = 'light'; document.querySelector('meta[name="theme-color"]').content = '#F3EDE0'; } } catch {}</script>
   <style>html { background: #020611; color-scheme: dark; } html[data-theme="light"] { background: #F3EDE0; color-scheme: light; }</style>
   <link rel="preconnect" href="https://fonts.googleapis.com" />

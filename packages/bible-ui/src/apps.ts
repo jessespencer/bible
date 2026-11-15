@@ -90,3 +90,20 @@ export const appHref = (app: AppEntry): string =>
   LOCAL_HOSTS.has(location.hostname)
     ? `${location.protocol}//${location.hostname}:${app.devPort}${app.path}`
     : app.path;
+
+/**
+ * The switcher's link to an app. In production Night or Day is shared through storage on one origin.
+ * Dev servers are separate origins with separate storage, so the link carries the saved choice as
+ * `?bui-theme=`, which each app's index.html saves and strips before first paint.
+ */
+export const appSwitchHref = (app: AppEntry): string => {
+  const href = appHref(app);
+  if (!LOCAL_HOSTS.has(location.hostname)) return href;
+  let theme: string | null = null;
+  try {
+    theme = localStorage.getItem("bui-theme");
+  } catch {
+    // Storage refused: the next app starts on its own default.
+  }
+  return theme === "light" || theme === "dark" ? `${href}?bui-theme=${theme}` : href;
+};

@@ -17,8 +17,8 @@ Shared design system and UI components for the Bible apps — [Atlas](../../apps
 - Day, a second set of the same tokens: parchment (`#F3EDE0` base) and ink, under `html[data-theme="light"]`. Each app deepens its accent for paper in an `html[data-theme="light"]:root` rule. Inside Day, `.bui-night` gives one element Night's tokens back, such as Galaxy's sky; set `--night-accent-rgb` on `html:root` so its accent follows
 
 ### Components
-- `createHeader({ title, subtitle, appId, compact })` — site header with title, subtitle, rainbow gradient bar, and a `controls` slot for app-specific buttons. `appId` adds the app switcher. `compact` gives the one-bar layout, with a `center` slot for search
-- `APPS`, `appHref(app)` — the app registry and a URL to each app that works in dev and production. Each entry carries its Lucide icon as SVG markup and its accent, and the switcher draws each icon glowing in its own app's accent. They also come alone from `/apps`, with no theme listener or styles, for an app that draws its own switcher (By Heart)
+- `createHeader({ title, subtitle, appId, compact })` — site header with title, subtitle, rainbow gradient bar, and a `controls` slot for app-specific buttons. `appId` adds the app switcher. `compact` gives the one-bar layout, with a `center` slot for search. The compact bar is the same height in every app: its brand and controls each sit in a 36px track, whatever size the controls are
+- `APPS`, `appHref(app)`, `appSwitchHref(app)` — the app registry and a URL to each app that works in dev and production. `appSwitchHref` is for switcher links: in dev, where each app is its own origin with its own storage, it adds the saved Night or Day as `?bui-theme=`. Each entry carries its Lucide icon as SVG markup and its accent, and the switcher draws each icon glowing in its own app's accent. They also come alone from `/apps`, with no theme listener or styles, for an app that draws its own switcher (By Heart)
 - `setupSheet(panel, handle, onClose)` (from `/sheet`) — the two-height phone bottom sheet. Give the panel `.bui-sheet` and the handle `.bui-sheet__handle`
 - `books`, `bookOffsets`, `totalVerses` (from `/bible`) — the 66 books and KJV verse numbering, 31,102 verses
 - `createGuide({ parent, stage, icon })` (from `/guide`) — a Controls button that opens how to explore the current view, with mouse or touch steps and keyboard keys, plus a one-time tip the first time a reader opens each view. Call `show(id, content)` when the view changes; apps pass their own icons
@@ -33,9 +33,10 @@ Shared design system and UI components for the Bible apps — [Atlas](../../apps
 
 ## Usage
 
-Set the theme before first paint, so Day never flashes dark. In each app's `index.html` `<head>`, after the `theme-color` meta:
+Set the theme before first paint, so Day never flashes dark. In each app's `index.html` `<head>`, after the `theme-color` meta. The first script takes Night or Day from a dev switcher link (`appSwitchHref`) and tidies the address:
 
 ```html
+<script>try { var bp = new URLSearchParams(location.search), bt = bp.get('bui-theme'); if (bt === 'light' || bt === 'dark') { localStorage.setItem('bui-theme', bt); bp.delete('bui-theme'); var bq = bp.toString(); history.replaceState(null, '', location.pathname + (bq ? '?' + bq : '') + location.hash); } } catch (e) {}</script>
 <script>try { if (localStorage.getItem('bui-theme') === 'light') { document.documentElement.dataset.theme = 'light'; document.querySelector('meta[name="theme-color"]').content = '#F3EDE0'; } } catch {}</script>
 <style>html { background: #020611; color-scheme: dark; } html[data-theme="light"] { background: #F3EDE0; color-scheme: light; }</style>
 ```

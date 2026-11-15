@@ -65,11 +65,11 @@ Type something like "I'm anxious about my job interview" or "my dad just died" a
 
 <img src="packages/bible-ui/docs/app-switcher.png" alt="The app switcher open in Atlas, listing Atlas, Lineage and By Heart with their icons and taglines, above a Night and Day switch" width="370" align="right">
 
-Every app has a mark of its own: Atlas's rainbow of arcs, Lineage's branching family line, By Heart's heart, and Bread Alone's ear of wheat. The mark sits beside each app's title, and tapping it opens the **app switcher**: every app with a line on what each is for. In Atlas and Lineage a Night and Day switch sits at its foot.
+Every app has a mark of its own: Atlas's rainbow of arcs, Lineage's branching family line, By Heart's heart, and Bread Alone's ear of wheat. The mark sits beside each app's title, and tapping it opens the **app switcher**: every app with a line on what each is for. In Atlas, Lineage and Bread Alone a Night and Day switch sits at its foot.
 
 - **One tap across.** Pick an app and it opens in the same tab.
 - **Each app in its own colour.** Starlight for Atlas, candlelight for Lineage, Ember for By Heart, Olive for Bread Alone, each deepened for paper by day.
-- **Night or Day follows you** from Atlas to Lineage. By Heart keeps its own for now.
+- **Night or Day follows you** from app to app. By Heart follows your system until you choose.
 - **One place to add an app.** The list lives in bible-ui's `APPS`, so a new app appears in every switcher at once.
 
 By Heart draws the same list in its own type: its wordmark opens the apps on a sheet, like its book and translation pickers.
