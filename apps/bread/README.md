@@ -1,6 +1,6 @@
 # 🌾 Bread Alone
 
-> "Man shall not live by bread alone, but by every word that proceedeth out of the mouth of God." (Matthew 4:4)
+> "Man shall not live by bread alone, but by every word that comes from the mouth of God." (Matthew 4:4, ESV)
 
 Say what you're carrying, in plain words, and read three verses for it.
 
