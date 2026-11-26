@@ -5,6 +5,7 @@
 
 import { APPS, appHref } from "@jessespencer/bible-ui";
 import { setupSheet } from "@jessespencer/bible-ui/sheet";
+import { createSkeleton, WORDS_PER_VERSE } from "@jessespencer/bible-ui/skeleton";
 import { shareView } from "@jessespencer/bible-ui/share";
 import { createTranslationPicker } from "@jessespencer/bible-ui/translation-picker";
 import { appendEsvCredit, createEsvKeyForm, ESV_MARK, EsvKeyError, heldEsv, loadEsv } from "@jessespencer/bible-ui/esv";
@@ -171,16 +172,17 @@ export const initCompanion = (
 
     const id = ++renderId;
     const root = section(body, "Scripture");
-    const text = el("p", "cp-text cp-loading", root);
-    text.textContent = "Loading…";
-
+    const text = el("p", "cp-text", root);
     text.lang = translation.language;
     const last = Math.min(first.end, first.start + PREVIEW_VERSES - 1);
     const shownVerses = Array.from({ length: last - first.start + 1 }, (_, i) => first.start + i);
+    // The passage's shape holds its place until the words arrive.
+    text.append(
+      createSkeleton({ words: shownVerses.length * WORDS_PER_VERSE, from: first.start, label: "Loading the scripture…" }),
+    );
     verseTexts(translation, shownVerses).then(
       (verses) => {
         if (id !== renderId) return;
-        text.classList.remove("cp-loading");
         text.replaceChildren();
         shownVerses.forEach((verse, i) => {
           if (!verses[i]) return;

@@ -1,4 +1,5 @@
 import { createElement, Copy } from 'lucide';
+import { skeletonHtml, WORDS_PER_VERSE } from '@jessespencer/bible-ui/skeleton';
 import { LINKED_TRANSLATIONS, readElsewhereHref } from '@jessespencer/bible-ui/translations';
 import { BOOKS } from '../data/books';
 import { BOOK_GENRE, GENRES } from '../data/genres';
@@ -45,7 +46,8 @@ function genreOf(verse: number) {
 
 function verseText(texts: VerseTexts, verse: number): string {
   const text = texts?.(verse);
-  if (text === undefined) return '<span class="cp-loading">Loading text…</span>';
+  // Each verse waits in its own shape, so a chapter of them doesn't look like one line repeated.
+  if (text === undefined) return skeletonHtml({ words: WORDS_PER_VERSE, from: verse, label: 'Loading text…' });
   if (!text) return `<em>The ${reading.abbr} omits this verse, following the earliest manuscripts.</em>`;
   return reading.language === 'en' ? escapeHtml(text) : `<span lang="${reading.language}">${escapeHtml(text)}</span>`;
 }

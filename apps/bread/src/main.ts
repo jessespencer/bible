@@ -245,21 +245,30 @@ const cardText = async (): Promise<string[]> => {
   return text;
 };
 
+// The real list takes the skeleton's place.
+const swapIn = (waiting?: HTMLElement | null) => {
+  waiting?.remove();
+  if (!list.isConnected) results.insertBefore(list, resultsFoot);
+};
+
 // Crossway asks for a link to www.esv.org wherever ESV text is shown; its full notice is behind Credits.
 const notice = el("p", "results__notice");
 appendEsvCredit(notice);
 
-const render = async () => {
+/** Prints the found verses. `waiting` skeleton cards stay up until their text has loaded too. */
+const render = async (waiting?: HTMLElement | null) => {
   let text: string[];
   try {
     text = await cardText();
   } catch (error) {
     if (!(error instanceof EsvKeyError)) throw error;
+    swapIn(waiting);
     renderHead();
     list.replaceChildren();
     resultsHeading.append(createEsvKeyForm(error.message, () => void render()));
     return;
   }
+  swapIn(waiting);
   renderHead();
   await showCards(list, { verses: shown, text, translation, atlasHref });
   if (translation.remote) resultsFoot.after(notice);
@@ -288,9 +297,8 @@ const run = async ({ again = false, fromHistory = false } = {}) => {
       shown = search.find(need, { shuffle: true });
     }
     seen.push(...shown);
-    waiting?.remove();
-    if (!list.isConnected) results.insertBefore(list, resultsFoot);
-    await render();
+    // In the ESV the verses are fetched after they're found, so the skeleton waits for that too.
+    await render(waiting);
     if (!again && results.getBoundingClientRect().top > innerHeight * 0.6) {
       results.scrollIntoView({ behavior: prefersStillness() ? "auto" : "smooth", block: "start" });
     }
