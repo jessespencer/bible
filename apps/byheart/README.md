@@ -28,7 +28,11 @@ Once three verses of a book are begun, the main page offers a drill in the other
 
 BSB, WEB, NET, LEB, KJV, ASV and the Geneva Bible load from the free [Bible API](https://bible.helloao.org) and are cached in the browser. NET and LEB are copyrighted, so the app shows their required credits and links.
 
-The ESV needs a free key from [api.esv.org](https://api.esv.org/account/create-application/), which you paste into the app. Crossway's terms cap stored or displayed text at half a book, so ESV text is shown a chapter at a time and never written to disk.
+The ESV needs a free key from [api.esv.org](https://api.esv.org/account/create-application/), which you paste into the app. Crossway's [conditions](https://api.esv.org/#conditions) let no page show, and no app store, more than 500 verses or half of any book, whichever is less, so:
+
+- ESV text is never written to disk. In memory the app holds at most two chapters, and never more than that limit of any one book, letting go of the older chapter first (Jonah 1 and 2 together would pass half of Jonah).
+- A chapter longer than half its book is printed in parts of even length, which you turn between under the chapter numbers or from the foot of the page. Recitals and Where is it? load one part at a time too. Only Obadiah, Haggai 2, Philemon, 2 and 3 John and Jude need this; the exemption for one- and two-chapter books covers a single request, not what is shown.
+- Every screen with ESV text carries Crossway's notice and a link to www.esv.org. The page's colophon gives the full notice, and the text there and in Where is it? ends with "(ESV)".
 
 NIV, NKJV and NLT come through [API.Bible](https://api.bible), which needs a free key and allows only non-commercial use on its free plan. Like the ESV, this text stays in memory, two chapters at most, and each view is reported through API.Bible's FUMS tracker. Their footnotes appear under the text.
 

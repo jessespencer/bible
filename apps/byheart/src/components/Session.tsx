@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { fetchChapter, getTranslation, refLabel, type Book, type Verse } from '../lib/bible'
+import { fetchChapter, getTranslation, partOf, refLabel, splitAtParts, type Book, type Verse } from '../lib/bible'
 import {
   LADDER,
   STAGE_HINTS,
@@ -46,9 +46,11 @@ const REVEALS: Partial<Record<Stage, Reveal>> = {
 const RUN_STAGE = 7
 const FLOURISH_MS = 1100
 
-export const Session = ({ items, book, translation, progress, onRecord, onExit, section }: SessionProps) => {
+export const Session = ({ items: asked, book, translation, progress, onRecord, onExit, section }: SessionProps) => {
+  // A run across an ESV chapter printed in parts recites one part at a time, as the page shows it.
+  const items = useMemo(() => splitAtParts(translation, book, asked), [translation, book, asked])
   const [index, setIndex] = useState(0)
-  const [chapterText, setChapterText] = useState<{ chapter: number; verses: Verse[] }>()
+  const [chapterText, setChapterText] = useState<{ chapter: number; part: number; verses: Verse[] }>()
   const [loadError, setLoadError] = useState('')
   const item = items[index] as SessionItem | undefined
   const firstKey = item ? verseKey(translation, book.code, item.chapter, item.from) : ''
@@ -60,16 +62,19 @@ export const Session = ({ items, book, translation, progress, onRecord, onExit, 
   const [speaking, setSpeaking] = useState(false)
   const [tally, setTally] = useState({ verses: 0, stumbles: 0 })
 
+  const part = item ? partOf(translation, book, item.chapter, item.from) : 0
+  const textReady = !!item && chapterText?.chapter === item.chapter && chapterText.part === part
+
   useEffect(() => {
-    if (!item || chapterText?.chapter === item.chapter) return
+    if (!item || textReady) return
     let current = true
-    fetchChapter(translation, book, item.chapter)
-      .then((verses) => current && setChapterText({ chapter: item.chapter, verses }))
+    fetchChapter(translation, book, item.chapter, part)
+      .then((verses) => current && setChapterText({ chapter: item.chapter, part, verses }))
       .catch((e: Error) => current && setLoadError(e.message || 'This translation needs a key. Add yours on the page.'))
     return () => {
       current = false
     }
-  }, [item, chapterText, translation, book])
+  }, [item, textReady, part, translation, book])
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0)
@@ -82,16 +87,16 @@ export const Session = ({ items, book, translation, progress, onRecord, onExit, 
   }, [onExit])
 
   const verses = useMemo(() => {
-    if (!item || chapterText?.chapter !== item.chapter) return []
-    return chapterText.verses.filter((v) => v.verse >= item.from && v.verse <= item.to)
-  }, [item, chapterText])
+    if (!item || !textReady) return []
+    return chapterText!.verses.filter((v) => v.verse >= item.from && v.verse <= item.to)
+  }, [item, textReady, chapterText])
 
   const previousVerse = useMemo(() => {
-    if (!item || chapterText?.chapter !== item.chapter || item.kind !== 'learn') return undefined
-    const before = chapterText.verses.find((v) => v.verse === item.from - 1)
+    if (!item || !textReady || item.kind !== 'learn') return undefined
+    const before = chapterText!.verses.find((v) => v.verse === item.from - 1)
     const known = before && (progress[verseKey(translation, book.code, before.chapter, before.verse)]?.box ?? 0) > 0
     return known ? before : undefined
-  }, [item, chapterText, progress, translation, book])
+  }, [item, textReady, chapterText, progress, translation, book])
 
   const practised = useMemo(
     () => (stage === 'thread' && previousVerse ? [previousVerse, ...verses] : verses),
@@ -219,8 +224,7 @@ export const Session = ({ items, book, translation, progress, onRecord, onExit, 
 
   const renderStage = () => {
     if (!tokens.length) {
-      const loaded = chapterText?.chapter === item.chapter
-      return <p className="session-message">{loaded ? 'This passage is not in this translation.' : 'Opening the book…'}</p>
+      return <p className="session-message">{textReady ? 'This passage is not in this translation.' : 'Opening the book…'}</p>
     }
     if (flourish === 'pass') {
       return (

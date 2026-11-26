@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { chapterName, fetchChapter, getTranslation, type Book, type Verse } from '../lib/bible'
+import { chapterName, chapterParts, fetchChapter, getTranslation, partOf, type Book, type Verse } from '../lib/bible'
 import type { Progress } from '../lib/memory'
 import { gradeVerse, whereRound, type PlaceGrade } from '../lib/where'
 import { Back } from './Back'
@@ -32,7 +32,7 @@ const NOTES: Record<PlaceGrade, string> = {
 export const WhereIsIt = ({ book, translation, progress, onExit }: WhereIsItProps) => {
   const [queue, setQueue] = useState(() => whereRound(progress, translation, book.code))
   const [index, setIndex] = useState(0)
-  const [text, setText] = useState<{ chapter: number; verses: Verse[] }>()
+  const [text, setText] = useState<{ chapter: number; part: number; verses: Verse[] }>()
   const [loadError, setLoadError] = useState('')
   // A book of one chapter has only the verse to find.
   const [inChapter, setInChapter] = useState(book.chapters === 1)
@@ -42,9 +42,14 @@ export const WhereIsIt = ({ book, translation, progress, onExit }: WhereIsItProp
   const graded = useRef(new Set<string>())
   const timer = useRef(0)
   const place = queue[index] as (typeof queue)[number] | undefined
-  const loaded = !!place && text?.chapter === place.chapter
+  // An ESV chapter printed in parts loads only the part holding the verse, so the grid
+  // takes its length from the parts, never from what was loaded.
+  const parts = place ? chapterParts(translation, book, place.chapter) : []
+  const part = place ? partOf(translation, book, place.chapter, place.verse) : 0
+  const loaded = !!place && text?.chapter === place.chapter && text.part === part
   const verse = loaded ? text.verses.find((v) => v.verse === place.verse) : undefined
-  const lastVerse = loaded ? (text.verses[text.verses.length - 1]?.verse ?? 1) : 1
+  const lastVerse =
+    parts.length > 1 ? parts[parts.length - 1][1] : loaded ? (text.verses[text.verses.length - 1]?.verse ?? 1) : 1
   const step = inChapter ? 'verse' : 'chapter'
   const count = inChapter ? lastVerse : book.chapters
 
@@ -59,15 +64,15 @@ export const WhereIsIt = ({ book, translation, progress, onExit }: WhereIsItProp
 
   // One chapter at a time: licensed text may only be held briefly, and each view is reported.
   useEffect(() => {
-    if (!place || text?.chapter === place.chapter) return
+    if (!place || loaded) return
     let current = true
-    fetchChapter(translation, book, place.chapter)
-      .then((verses) => current && setText({ chapter: place.chapter, verses }))
+    fetchChapter(translation, book, place.chapter, part)
+      .then((verses) => current && setText({ chapter: place.chapter, part, verses }))
       .catch((e: Error) => current && setLoadError(e.message || 'This translation needs a key. Add yours on the page.'))
     return () => {
       current = false
     }
-  }, [place, text, translation, book])
+  }, [place, loaded, part, translation, book])
 
   const advance = () => {
     clearTimeout(timer.current)
@@ -186,7 +191,10 @@ export const WhereIsIt = ({ book, translation, progress, onExit }: WhereIsItProp
       <section className="stage">
         {verse ? (
           <div className="where" key={index}>
-            <blockquote className="where-verse">{verse.text}</blockquote>
+            <blockquote className="where-verse">
+              {verse.text}
+              {credited.id === 'ESV' && <span className="esv-mark"> (ESV)</span>}
+            </blockquote>
             {answer ? (
               <div className="where-answer" role="status">
                 <p className="quiz-prompt">
