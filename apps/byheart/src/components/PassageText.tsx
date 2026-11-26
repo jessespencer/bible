@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import type { Token } from '../lib/text'
 
-export type WordState = 'plain' | 'todo' | 'current' | 'done' | 'helped' | 'gone'
+export type WordState = 'plain' | 'todo' | 'current' | 'done' | 'helped' | 'typo' | 'gone'
 export type Reveal = 'ghost' | 'initial' | 'shape' | 'blank'
 
 interface WordProps {
@@ -9,11 +9,12 @@ interface WordProps {
   state: WordState
   reveal: Reveal
   shaking: boolean
+  draft?: string
 }
 
-const Word = memo(({ token, state, reveal, shaking }: WordProps) => {
-  const inked = state === 'done' || state === 'helped' || state === 'plain'
-  const classes = ['w', `w-${state}`, inked ? '' : `r-${reveal}`, shaking ? 'w-wrong' : '']
+const Word = memo(({ token, state, reveal, shaking, draft }: WordProps) => {
+  const inked = state === 'done' || state === 'helped' || state === 'typo' || state === 'plain'
+  const classes = ['w', `w-${state}`, inked ? '' : `r-${reveal}`, shaking ? 'w-wrong' : '', draft ? 'w-drafting' : '']
   const firstLetterShown = !inked && reveal === 'initial'
   return (
     <span className={classes.join(' ')} data-word={token.id}>
@@ -24,7 +25,16 @@ const Word = memo(({ token, state, reveal, shaking }: WordProps) => {
           <span className="rest">{token.word.slice(1)}</span>
         </>
       ) : (
-        <span className="core">{token.word}</span>
+        <span className="core">
+          {token.word}
+          {draft && (
+            <span className="draft">
+              <span className="draft-typed">{draft}</span>
+              {/* Tracing, the rest of the word stays ghosted ahead of what you have typed. */}
+              {reveal === 'ghost' && <span className="draft-rest">{token.word.slice(draft.length)}</span>}
+            </span>
+          )}
+        </span>
       )}
       {token.after && <span className="p">{token.after}</span>}
     </span>
@@ -37,9 +47,11 @@ interface PassageTextProps {
   stateOf: (token: Token) => WordState
   wrong?: { id: number; nonce: number }
   verseNumbers?: number[]
+  // What is typed so far of the current word, written over its place on the line.
+  draft?: { id: number; text: string }
 }
 
-export const PassageText = ({ lines, reveal, stateOf, wrong, verseNumbers }: PassageTextProps) => {
+export const PassageText = ({ lines, reveal, stateOf, wrong, verseNumbers, draft }: PassageTextProps) => {
   const tokenCount = lines.reduce((sum, line) => sum + line.length, 0)
   const size = tokenCount > 70 ? 'long' : tokenCount > 38 ? 'medium' : 'short'
   return (
@@ -57,6 +69,7 @@ export const PassageText = ({ lines, reveal, stateOf, wrong, verseNumbers }: Pas
                 state={stateOf(token)}
                 reveal={typeof reveal === 'function' ? reveal(token) : reveal}
                 shaking={wrong?.id === token.id}
+                draft={draft?.id === token.id ? draft.text : undefined}
               />
             ))}
           </p>

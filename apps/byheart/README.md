@@ -14,6 +14,16 @@ pnpm test:byheart
 
 Press `b` for the contents and `t` for translations. In the contents, type to narrow the books (`eph`, `mk`, `1 cor`), or add a chapter to go straight there (`rom 8`), then press Enter. Number keys pick a translation.
 
+## Reciting as a test
+
+Reciting a chapter, the book, a selection of verses or a section of the structure map is a test. Choose how to recite it first: said aloud (where the browser can listen), typed word by word, or typed by first letters. A bar with a clock and a Stop button floats at the foot of the screen while it runs; in a spoken test it also shows a meter that moves with your voice, so you can see the microphone hearing you.
+
+Stop wherever you like. A verse is scored once you reach three quarters of it, and verses you did not reach are left as they were, so reciting Ephesians 1:1–20 out of chapter 1 needs no setup. The score counts the words you recalled without help, verse by verse, and prints the verses that slipped with the missed words marked. It also shows your best and last score for the same passage recited the same way.
+
+A spoken test is scored once it is over, by lining the whole transcript up against the text, so a skipped phrase costs only its own words. Typing whole words ignores case and punctuation and allows one slip in a word of five letters or more, marked on the score but not counted against you. Tests grade verses for review the same way a recital always has.
+
+Whole-word typing is also a setting in the learning stages that hide most of the text, and in trace. Initials and blanks stay first-letter drills.
+
 ## Structure map
 
 Books with an outline get a one-page map, reached from the main page. Each section shows its name, its verses and how well they are known. Tap one to recite it, even across a chapter break, and quiz yourself on what comes next and on where a passage belongs. Ephesians has an outline so far; add others in `src/lib/outline.ts`.
@@ -38,7 +48,7 @@ NIV, NKJV and NLT come through [API.Bible](https://api.bible), which needs a fre
 
 In development, put keys in `.env.local` at the repo root as `VITE_ESV_KEY` and `VITE_API_BIBLE_KEY` so they apply on every port and in every app. They are never included in a production build.
 
-Progress is stored per translation in `localStorage`. Browsers can clear it, Safari after a week away unless the app is on the home screen, so the page's colophon saves and restores a JSON backup of progress, structure recall, place and theme. Keys and Bible text are never included. Once there is progress, the app also asks the browser to keep its storage.
+Progress is stored per translation in `localStorage`. Browsers can clear it, Safari after a week away unless the app is on the home screen, so the page's colophon saves and restores a JSON backup of progress, structure recall, test scores, settings, place and theme. Keys and Bible text are never included. Once there is progress, the app also asks the browser to keep its storage.
 
 ## The Greek behind the ESV
 
