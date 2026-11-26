@@ -5,6 +5,7 @@ import { gradeVerse, whereRound, type PlaceGrade } from '../lib/where'
 import { Back } from './Back'
 import { Heart } from './Heart'
 import { Footnotes } from './Footnotes'
+import { CreditLinks } from './Credits'
 
 interface WhereIsItProps {
   book: Book
@@ -235,15 +236,15 @@ export const WhereIsIt = ({ book, translation, progress, onExit }: WhereIsItProp
       </section>
       <footer className="session-hint">
         {book.chapters > 1 ? 'Find its chapter, then its verse.' : 'Find its verse.'}
-        {credited.links?.map((link) => (
-          <span key={link.url}>
-            {' '}
-            <a href={link.url} target="_blank" rel="noreferrer">
-              {link.label}
-            </a>
-          </span>
-        ))}
-        {credited.creditOnRecitals && <p className="session-credit">{credited.credit}</p>}
+        {credited.creditOnRecitals ? (
+          <p className="session-credit">{credited.credit}</p>
+        ) : (
+          credited.links && (
+            <p className="session-credit">
+              <CreditLinks translation={credited} />
+            </p>
+          )
+        )}
         {answer && verse && <Footnotes verses={[verse]} />}
       </footer>
     </main>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   MissingKeyError,
   chapterName,
@@ -12,198 +12,333 @@ import {
   type Book,
   type Translation,
   type Verse,
-} from '../lib/bible'
-import { hasGreek, loadGreek, splitVerse, type GreekData, type GreekTag } from '../lib/greek'
-import { inkLevel, isDue, verseKey, type Progress } from '../lib/memory'
-import { canTransition, prefersStillness, withTransition } from '../lib/motion'
-import { AppSwitcher } from './AppSwitcher'
-import { Backup } from './Backup'
-import { Footnotes } from './Footnotes'
-import { GreekNote } from './GreekNote'
-import { BookPicker, TranslationPicker } from './Picker'
-import type { SessionItem } from './Session'
+} from "../lib/bible";
+import {
+  hasGreek,
+  loadGreek,
+  splitVerse,
+  type GreekData,
+  type GreekTag,
+} from "../lib/greek";
+import { inkLevel, isDue, verseKey, type Progress } from "../lib/memory";
+import { canTransition, prefersStillness, withTransition } from "../lib/motion";
+import { AppSwitcher } from "./AppSwitcher";
+import { Backup } from "./Backup";
+import { CreditLinks, Credits } from "./Credits";
+import { Footnotes } from "./Footnotes";
+import { GreekNote } from "./GreekNote";
+import { BookPicker, TranslationPicker } from "./Picker";
+import type { SessionItem } from "./Session";
 
 interface PageViewProps {
-  book: Book
-  chapter: number
-  translation: string
-  progress: Progress
-  theme: 'light' | 'dark'
-  onBook: (code: string, chapter?: number) => void
-  onChapter: (chapter: number) => void
-  onTranslation: (id: string) => void
-  onTheme: (origin: HTMLElement) => void
-  onStart: (items: SessionItem[]) => void
-  onMap?: () => void
-  onWhere?: () => void
+  book: Book;
+  chapter: number;
+  translation: string;
+  progress: Progress;
+  theme: "light" | "dark";
+  onBook: (code: string, chapter?: number) => void;
+  onChapter: (chapter: number) => void;
+  onTranslation: (id: string) => void;
+  onTheme: (origin: HTMLElement) => void;
+  onStart: (items: SessionItem[]) => void;
+  onMap?: () => void;
+  onWhere?: () => void;
 }
 
 const parseKey = (key: string) => {
-  const [, , chapter, verse] = key.split(':')
-  return { chapter: Number(chapter), verse: Number(verse) }
-}
+  const [, , chapter, verse] = key.split(":");
+  return { chapter: Number(chapter), verse: Number(verse) };
+};
 
 export const PageView = (props: PageViewProps) => {
-  const { book, chapter, translation, progress, theme } = props
-  const [loaded, setLoaded] = useState<{ id: string; verses: Verse[]; turned: boolean }>()
-  const [failure, setFailure] = useState<{ id: string; message: string; needsKey: boolean }>()
-  const [chosen, setChosen] = useState<{ id: string; range: [number, number] }>()
-  const [keyAttempt, setKeyAttempt] = useState(0)
-  const [greekOn, setGreekOn] = useState(false)
-  const [greek, setGreek] = useState<GreekData>()
-  const [opened, setOpened] = useState<{ id: string; tag: GreekTag; ref: string; anchor: HTMLElement }>()
-  const [found, setFound] = useState<{ chapter: number; verse: number }>()
-  const [partChoice, setPartChoice] = useState<{ id: string; part: number }>()
-  const printed = useRef(false)
+  const { book, chapter, translation, progress, theme } = props;
+  const [loaded, setLoaded] = useState<{
+    id: string;
+    verses: Verse[];
+    turned: boolean;
+  }>();
+  const [failure, setFailure] = useState<{
+    id: string;
+    message: string;
+    needsKey: boolean;
+  }>();
+  const [chosen, setChosen] = useState<{
+    id: string;
+    range: [number, number];
+  }>();
+  const [keyAttempt, setKeyAttempt] = useState(0);
+  const [greekOn, setGreekOn] = useState(false);
+  const [greek, setGreek] = useState<GreekData>();
+  const [opened, setOpened] = useState<{
+    id: string;
+    tag: GreekTag;
+    ref: string;
+    anchor: HTMLElement;
+  }>();
+  const [found, setFound] = useState<{ chapter: number; verse: number }>();
+  const [partChoice, setPartChoice] = useState<{ id: string; part: number }>();
+  const printed = useRef(false);
   // An ESV chapter longer than half its book is printed in parts, one at a time.
-  const parts = chapterParts(translation, book, chapter)
-  const chapterId = `${translation}:${book.code}:${chapter}`
-  const part = partChoice?.id === chapterId ? Math.min(partChoice.part, parts.length - 1) : 0
-  const inParts = parts.length > 1
-  const pageId = `${chapterId}:${part}:${keyAttempt}`
-  const selection = chosen?.id === pageId ? chosen.range : undefined
-  const problem = failure?.id === pageId ? failure : undefined
+  const parts = chapterParts(translation, book, chapter);
+  const chapterId = `${translation}:${book.code}:${chapter}`;
+  const part =
+    partChoice?.id === chapterId
+      ? Math.min(partChoice.part, parts.length - 1)
+      : 0;
+  const inParts = parts.length > 1;
+  const pageId = `${chapterId}:${part}:${keyAttempt}`;
+  const selection = chosen?.id === pageId ? chosen.range : undefined;
+  const problem = failure?.id === pageId ? failure : undefined;
   // The last page stays printed while the next one loads, so the page never collapses between them.
-  const held = problem ? undefined : loaded
-  const waiting = !!held && held.id !== pageId
-  const verses = held?.verses ?? []
-  const opening = !held && !problem
-  const greekReady = hasGreek(translation, book.code) && greekOn && !waiting ? greek : undefined
-  const note = greekReady && opened?.id === pageId ? opened : undefined
+  const held = problem ? undefined : loaded;
+  const waiting = !!held && held.id !== pageId;
+  const verses = held?.verses ?? [];
+  const opening = !held && !problem;
+  const greekReady =
+    hasGreek(translation, book.code) && greekOn && !waiting ? greek : undefined;
+  const note = greekReady && opened?.id === pageId ? opened : undefined;
 
   useEffect(() => {
-    const live = { current: true }
+    const live = { current: true };
     fetchChapter(translation, book, chapter, part)
       .then((v) => {
-        if (!live.current) return
+        if (!live.current) return;
         // Turning from one page to the next cross-fades the text in place and eases what sits below it.
         // Otherwise, as on the first page, the text rises into place.
-        const turned = printed.current && canTransition()
-        printed.current = true
+        const turned = printed.current && canTransition();
+        printed.current = true;
         const show = () => {
-          setLoaded({ id: pageId, verses: v, turned })
-          setFailure(undefined)
-        }
-        if (turned) withTransition('page', show)
-        else show()
+          setLoaded({ id: pageId, verses: v, turned });
+          setFailure(undefined);
+        };
+        if (turned) withTransition("page", show);
+        else show();
       })
       .catch((e: Error) => {
-        if (live.current) setFailure({ id: pageId, message: e.message, needsKey: e instanceof MissingKeyError })
-      })
+        if (live.current)
+          setFailure({
+            id: pageId,
+            message: e.message,
+            needsKey: e instanceof MissingKeyError,
+          });
+      });
     return () => {
-      live.current = false
-    }
-  }, [translation, book, chapter, part, pageId])
+      live.current = false;
+    };
+  }, [translation, book, chapter, part, pageId]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setChosen(undefined)
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
+    const onKey = (e: KeyboardEvent) =>
+      e.key === "Escape" && setChosen(undefined);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
-    if (greekOn && !greek) loadGreek().then(setGreek)
-  }, [greekOn, greek])
+    if (greekOn && !greek) loadGreek().then(setGreek);
+  }, [greekOn, greek]);
 
   useEffect(() => {
-    if (found?.chapter !== chapter || !loaded || loaded.id !== pageId) return
-    document.getElementById(`verse-${found.verse}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-  }, [found, chapter, loaded, pageId])
+    if (found?.chapter !== chapter || !loaded || loaded.id !== pageId) return;
+    document
+      .getElementById(`verse-${found.verse}`)
+      ?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [found, chapter, loaded, pageId]);
 
   useEffect(() => {
-    if (!note) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpened(undefined)
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [note])
+    if (!note) return;
+    const onKey = (e: KeyboardEvent) =>
+      e.key === "Escape" && setOpened(undefined);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [note]);
 
-  const prefix = `${translation}:${book.code}:`
-  const bookRecords = Object.entries(progress).filter(([key]) => key.startsWith(prefix))
-  const kept = bookRecords.filter(([, r]) => r.box > 0)
+  const prefix = `${translation}:${book.code}:`;
+  const bookRecords = Object.entries(progress).filter(([key]) =>
+    key.startsWith(prefix),
+  );
+  const kept = bookRecords.filter(([, r]) => r.box > 0);
   const due = bookRecords
     .filter(([, r]) => isDue(r))
     .map(([key]) => parseKey(key))
-    .sort((a, b) => a.chapter - b.chapter || a.verse - b.verse)
-  const recordOf = (verse: number) => progress[verseKey(translation, book.code, chapter, verse)]
-  const nextNew = verses.find((v) => !recordOf(v.verse)?.box)
+    .sort((a, b) => a.chapter - b.chapter || a.verse - b.verse);
+  const recordOf = (verse: number) =>
+    progress[verseKey(translation, book.code, chapter, verse)];
+  const nextNew = verses.find((v) => !recordOf(v.verse)?.box);
 
   const todayItems: SessionItem[] = [
-    ...due.map((d) => ({ kind: 'review' as const, chapter: d.chapter, from: d.verse, to: d.verse })),
-    ...(nextNew ? [{ kind: 'learn' as const, chapter, from: nextNew.verse, to: nextNew.verse }] : []),
-  ]
+    ...due.map((d) => ({
+      kind: "review" as const,
+      chapter: d.chapter,
+      from: d.verse,
+      to: d.verse,
+    })),
+    ...(nextNew
+      ? [
+          {
+            kind: "learn" as const,
+            chapter,
+            from: nextNew.verse,
+            to: nextNew.verse,
+          },
+        ]
+      : []),
+  ];
 
   const start = (items: SessionItem[]) => {
-    if (!waiting) props.onStart(items)
-  }
+    if (!waiting) props.onStart(items);
+  };
 
   const select = (verse: number) => {
-    if (waiting) return
-    if (!selection) return setChosen({ id: pageId, range: [verse, verse] })
-    const [from, to] = selection
-    if (verse >= from && verse <= to) return setChosen(undefined)
-    setChosen({ id: pageId, range: [Math.min(from, verse), Math.max(to, verse)] })
-  }
+    if (waiting) return;
+    if (!selection) return setChosen({ id: pageId, range: [verse, verse] });
+    const [from, to] = selection;
+    if (verse >= from && verse <= to) return setChosen(undefined);
+    setChosen({
+      id: pageId,
+      range: [Math.min(from, verse), Math.max(to, verse)],
+    });
+  };
 
   const learnSelection = ([from, to]: [number, number]) => {
     props.onStart(
-      Array.from({ length: to - from + 1 }, (_, i) => ({ kind: 'learn' as const, chapter, from: from + i, to: from + i })),
-    )
-  }
+      Array.from({ length: to - from + 1 }, (_, i) => ({
+        kind: "learn" as const,
+        chapter,
+        from: from + i,
+        to: from + i,
+      })),
+    );
+  };
 
   const toggleGreek = () => {
-    setGreekOn(!greekOn)
-    setChosen(undefined)
-    setOpened(undefined)
-    setFound(undefined)
-  }
+    setGreekOn(!greekOn);
+    setChosen(undefined);
+    setOpened(undefined);
+    setFound(undefined);
+  };
 
   const openWord = (tag: GreekTag, verse: number, anchor: HTMLElement) => {
-    const same = note?.tag === tag
-    setOpened(same ? undefined : { id: pageId, tag, ref: `${chapter}:${verse}`, anchor })
-  }
+    const same = note?.tag === tag;
+    setOpened(
+      same
+        ? undefined
+        : { id: pageId, tag, ref: `${chapter}:${verse}`, anchor },
+    );
+  };
 
   const goToVerse = (ref: string) => {
-    const [target, verse] = ref.split(':').map(Number)
-    setOpened(undefined)
-    setFound({ chapter: target, verse })
-    setPartChoice({ id: `${translation}:${book.code}:${target}`, part: partOf(translation, book, target, verse) })
-    if (target !== chapter) props.onChapter(target)
-  }
+    const [target, verse] = ref.split(":").map(Number);
+    setOpened(undefined);
+    setFound({ chapter: target, verse });
+    setPartChoice({
+      id: `${translation}:${book.code}:${target}`,
+      part: partOf(translation, book, target, verse),
+    });
+    if (target !== chapter) props.onChapter(target);
+  };
 
   const greekPieces = (v: Verse) => {
-    const tagged = greekReady?.verses[`${chapter}:${v.verse}`]
-    return tagged && splitVerse(v.text, tagged)
-  }
-  const untagged = greekReady ? verses.filter((v) => !greekPieces(v)).length : 0
+    const tagged = greekReady?.verses[`${chapter}:${v.verse}`];
+    return tagged && splitVerse(v.text, tagged);
+  };
+  const untagged = greekReady
+    ? verses.filter((v) => !greekPieces(v)).length
+    : 0;
 
-  const chapterCount = (n: number) => kept.filter(([key]) => parseKey(key).chapter === n).length
-  const lastVerse = inParts ? parts[parts.length - 1][1] : (verses[verses.length - 1]?.verse ?? 1)
+  const chapterCount = (n: number) =>
+    kept.filter(([key]) => parseKey(key).chapter === n).length;
+  const lastVerse = inParts
+    ? parts[parts.length - 1][1]
+    : (verses[verses.length - 1]?.verse ?? 1);
   const turnTo = (n: number) => {
-    setChosen(undefined)
-    setPartChoice({ id: chapterId, part: n })
-  }
-  const nextPart = inParts && part < parts.length - 1 ? parts[part + 1] : undefined
-  const credited = getTranslation(translation)
-  const titleStyle = { '--letters': Math.max(book.name.length, 8) } as CSSProperties
+    setChosen(undefined);
+    setPartChoice({ id: chapterId, part: n });
+  };
+  const nextPart =
+    inParts && part < parts.length - 1 ? parts[part + 1] : undefined;
+  const credited = getTranslation(translation);
+  const tagged = hasGreek(translation, book.code);
+  const credits = (
+    <>
+      {credited.credit && (
+        <p>
+          {credited.copyright ?? credited.credit}
+          {credited.links?.map((link) => (
+            <span key={link.url}>
+              {" "}
+              <a href={link.url} target="_blank" rel="noreferrer">
+                {link.label}
+              </a>
+            </span>
+          ))}
+        </p>
+      )}
+      {tagged && (
+        <p>
+          Greek text, grammar and glosses from{" "}
+          <a href="https://www.STEPBible.org" target="_blank" rel="noreferrer">
+            STEP Bible
+          </a>{" "}
+          (TAGNT, TBESG, TEGMC; CC BY 4.0). ESV word tags by{" "}
+          <a
+            href="https://www.TyndaleHouse.com"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Tyndale House, Cambridge
+          </a>{" "}
+          and STEP Bible (
+          <a
+            href="https://STEPBible.github.io/STEPBible-Data/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            TTESV
+          </a>
+          ; CC BY-NC 4.0), corrected against the ESV and limited to words of
+          meaning. The tags name a Greek word, not an interpretation.
+        </p>
+      )}
+    </>
+  );
+  const titleStyle = {
+    "--letters": Math.max(book.name.length, 8),
+  } as CSSProperties;
 
   return (
     <div className="page">
       <header className="masthead">
         <AppSwitcher />
-        <BookPicker book={book} translation={translation} progress={progress} onPick={props.onBook} />
-        <TranslationPicker translation={translation} progress={progress} onPick={props.onTranslation} />
-        <button type="button" className="quiet theme" onClick={(e) => props.onTheme(e.currentTarget)} aria-label="Switch between day and night">
-          {theme === 'light' ? '☾' : '☼'}
+        <BookPicker
+          book={book}
+          translation={translation}
+          progress={progress}
+          onPick={props.onBook}
+        />
+        <TranslationPicker
+          translation={translation}
+          progress={progress}
+          onPick={props.onTranslation}
+        />
+        <button
+          type="button"
+          className="quiet theme"
+          onClick={(e) => props.onTheme(e.currentTarget)}
+          aria-label="Switch between day and night"
+        >
+          {theme === "light" ? "☾" : "☼"}
         </button>
       </header>
 
       <section className="hero">
         <h1 style={titleStyle}>{book.name}</h1>
         <p className="tally">
-          <strong>{kept.length}</strong> {kept.length === 1 ? 'verse' : 'verses'} by heart
+          <strong>{kept.length}</strong>{" "}
+          {kept.length === 1 ? "verse" : "verses"} by heart
           {due.length > 0 && (
             <>
-              {' '}
+              {" "}
               · <strong className="rubric">{due.length}</strong> due today
             </>
           )}
@@ -216,18 +351,20 @@ export const PageView = (props: PageViewProps) => {
             onClick={() => start(todayItems)}
           >
             {due.length
-              ? 'Begin today’s verses'
+              ? "Begin today’s verses"
               : nextNew
                 ? `Learn verse ${nextNew.verse}`
                 : opening
-                  ? 'Opening the book…'
-                  : 'Nothing due today'}
+                  ? "Opening the book…"
+                  : "Nothing due today"}
           </button>
           <button
             type="button"
             className="quiet"
             disabled={!verses.length}
-            onClick={() => start([{ kind: 'run', chapter, from: 1, to: lastVerse }])}
+            onClick={() =>
+              start([{ kind: "run", chapter, from: 1, to: lastVerse }])
+            }
           >
             Recite chapter {chapter}
           </button>
@@ -236,14 +373,24 @@ export const PageView = (props: PageViewProps) => {
             className="quiet"
             onClick={() =>
               props.onStart(
-                Array.from({ length: book.chapters }, (_, i) => ({ kind: 'run' as const, chapter: i + 1, from: 1, to: 999 })),
+                Array.from({ length: book.chapters }, (_, i) => ({
+                  kind: "run" as const,
+                  chapter: i + 1,
+                  from: 1,
+                  to: 999,
+                })),
               )
             }
           >
             Recite the book
           </button>
           {props.onMap && (
-            <button type="button" className="quiet" aria-label={`The structure of ${book.name}`} onClick={props.onMap}>
+            <button
+              type="button"
+              className="quiet"
+              aria-label={`The structure of ${book.name}`}
+              onClick={props.onMap}
+            >
               Structure
             </button>
           )}
@@ -260,8 +407,8 @@ export const PageView = (props: PageViewProps) => {
           <button
             key={n}
             type="button"
-            className={n === chapter ? 'on' : ''}
-            aria-current={n === chapter ? 'page' : undefined}
+            className={n === chapter ? "on" : ""}
+            aria-current={n === chapter ? "page" : undefined}
             onClick={() => props.onChapter(n)}
           >
             {chapterName(book, n)}
@@ -271,13 +418,16 @@ export const PageView = (props: PageViewProps) => {
       </nav>
 
       {inParts && (
-        <nav className="chapters parts" aria-label={`Parts of ${book.chapters === 1 ? book.name : `chapter ${chapter}`}`}>
+        <nav
+          className="chapters parts"
+          aria-label={`Parts of ${book.chapters === 1 ? book.name : `chapter ${chapter}`}`}
+        >
           {parts.map(([from, to], n) => (
             <button
               key={from}
               type="button"
-              className={n === part ? 'on' : ''}
-              aria-current={n === part ? 'page' : undefined}
+              className={n === part ? "on" : ""}
+              aria-current={n === part ? "page" : undefined}
               aria-label={`Verses ${from} to ${to}`}
               onClick={() => turnTo(n)}
             >
@@ -288,17 +438,31 @@ export const PageView = (props: PageViewProps) => {
       )}
 
       {problem?.needsKey ? (
-        <KeyForm translation={credited} message={problem.message} onSaved={() => setKeyAttempt(keyAttempt + 1)} />
+        <KeyForm
+          translation={credited}
+          message={problem.message}
+          onSaved={() => setKeyAttempt(keyAttempt + 1)}
+        />
       ) : problem ? (
         <p className="session-message">{problem.message}</p>
       ) : (
-        <article className={`leaf ${greekReady ? 'leaf-greek' : ''} ${waiting ? 'leaf-waiting' : ''} ${held?.turned ? '' : 'leaf-arrive'}`} key={held?.id}>
+        <article
+          className={`leaf ${greekReady ? "leaf-greek" : ""} ${waiting ? "leaf-waiting" : ""} ${held?.turned ? "" : "leaf-arrive"}`}
+          key={held?.id}
+        >
           {hasGreek(translation, book.code) && verses.length > 0 && (
             <p className="greek-switch">
-              <button type="button" className={`quiet ${greekOn ? 'on' : ''}`} aria-pressed={greekOn} onClick={toggleGreek}>
+              <button
+                type="button"
+                className={`quiet ${greekOn ? "on" : ""}`}
+                aria-pressed={greekOn}
+                onClick={toggleGreek}
+              >
                 Greek
               </button>
-              {greekReady && <span> Tap a dotted word to see the Greek behind it.</span>}
+              {greekReady && (
+                <span> Tap a dotted word to see the Greek behind it.</span>
+              )}
             </p>
           )}
           {part === 0 && (
@@ -307,13 +471,19 @@ export const PageView = (props: PageViewProps) => {
             </span>
           )}
           {verses.map((v) => {
-            const record = recordOf(v.verse)
-            const chosen = selection && v.verse >= selection[0] && v.verse <= selection[1]
-            const inkClasses = `verse ink-${inkLevel(record)} ${isDue(record) ? 'due' : ''}`
+            const record = recordOf(v.verse);
+            const chosen =
+              selection && v.verse >= selection[0] && v.verse <= selection[1];
+            const inkClasses = `verse ink-${inkLevel(record)} ${isDue(record) ? "due" : ""}`;
             if (greekReady) {
-              const arrived = found?.chapter === chapter && found.verse === v.verse
+              const arrived =
+                found?.chapter === chapter && found.verse === v.verse;
               return (
-                <span key={v.verse} id={`verse-${v.verse}`} className={`${inkClasses} ${arrived ? 'found' : ''}`}>
+                <span
+                  key={v.verse}
+                  id={`verse-${v.verse}`}
+                  className={`${inkClasses} ${arrived ? "found" : ""}`}
+                >
                   {v.verse > 1 && <sup>{v.verse}</sup>}
                   {(greekPieces(v) ?? [{ text: v.text }]).map((piece, i) =>
                     piece.tag ? (
@@ -321,46 +491,53 @@ export const PageView = (props: PageViewProps) => {
                         key={i}
                         text={piece.text}
                         open={note?.tag === piece.tag}
-                        onOpen={(anchor) => openWord(piece.tag!, v.verse, anchor)}
+                        onOpen={(anchor) =>
+                          openWord(piece.tag!, v.verse, anchor)
+                        }
                       />
                     ) : (
                       piece.text
                     ),
-                  )}{' '}
+                  )}{" "}
                 </span>
-              )
+              );
             }
             return (
               <span
                 key={v.verse}
                 role="button"
                 tabIndex={0}
-                className={`${inkClasses} ${chosen ? 'chosen' : ''}`}
+                className={`${inkClasses} ${chosen ? "chosen" : ""}`}
                 onClick={() => select(v.verse)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    select(v.verse)
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    select(v.verse);
                   }
                 }}
               >
                 {v.verse > 1 && <sup>{v.verse}</sup>}
-                {v.text}{' '}
+                {v.text}{" "}
               </span>
-            )
+            );
           })}
-          {credited.id === 'ESV' && verses.length > 0 && <span className="esv-mark">(ESV)</span>}
+          {credited.id === "ESV" && verses.length > 0 && (
+            <span className="esv-mark">(ESV)</span>
+          )}
           {nextPart && verses.length > 0 && (
             <p className="read-on">
               <button
                 type="button"
                 className="quiet"
                 onClick={() => {
-                  turnTo(part + 1)
+                  turnTo(part + 1);
                   // The next part begins at the top of the page, not where this one ended.
                   document
-                    .querySelector('.parts')
-                    ?.scrollIntoView({ block: 'start', behavior: prefersStillness() ? 'auto' : 'smooth' })
+                    .querySelector(".parts")
+                    ?.scrollIntoView({
+                      block: "start",
+                      behavior: prefersStillness() ? "auto" : "smooth",
+                    });
                 }}
               >
                 Read on: verses {nextPart[0]}–{nextPart[1]}
@@ -382,56 +559,47 @@ export const PageView = (props: PageViewProps) => {
       )}
 
       <footer className="colophon">
-        <p>Unlearned verses are printed in grey. They darken as you learn them.</p>
+        <p>
+          Unlearned verses are printed in grey. They darken as you learn them.
+        </p>
         {inParts && (
           <p>
-            Crossway lets a page show no more than half of {book.name}, {esvLimit(book)} verses, so this{' '}
-            {book.chapters === 1 ? 'book' : 'chapter'} is printed in {parts.length} parts.
+            Crossway lets a page show no more than half of {book.name},{" "}
+            {esvLimit(book)} verses, so this{" "}
+            {book.chapters === 1 ? "book" : "chapter"} is printed in{" "}
+            {parts.length} parts.
           </p>
         )}
         {untagged > 0 && (
           <p>
-            Greek is hidden for {untagged === 1 ? 'one verse' : `${untagged} verses`} here: the wording differs from the
-            edition the tags were made for.
-          </p>
-        )}
-        {hasGreek(translation, book.code) && (
-          <p>
-            Greek text, grammar and glosses from{' '}
-            <a href="https://www.STEPBible.org" target="_blank" rel="noreferrer">
-              STEP Bible
-            </a>{' '}
-            (TAGNT, TBESG, TEGMC; CC BY 4.0). ESV word tags by{' '}
-            <a href="https://www.TyndaleHouse.com" target="_blank" rel="noreferrer">
-              Tyndale House, Cambridge
-            </a>{' '}
-            and STEP Bible (
-            <a href="https://STEPBible.github.io/STEPBible-Data/" target="_blank" rel="noreferrer">
-              TTESV
-            </a>
-            ; CC BY-NC 4.0), corrected against the ESV and limited to words of meaning. The tags name a Greek word, not an
-            interpretation.
+            Greek is hidden for{" "}
+            {untagged === 1 ? "one verse" : `${untagged} verses`} here: the
+            wording differs from the edition the tags were made for.
           </p>
         )}
         {credited.credit ? (
           <p>
-            {credited.copyright ?? credited.credit}
-            {credited.links?.map((link) => (
-              <span key={link.url}>
-                {' '}
-                <a href={link.url} target="_blank" rel="noreferrer">
-                  {link.label}
-                </a>
-              </span>
-            ))}
+            <CreditLinks translation={credited} />
+            {" · "}
+            <Credits>{credits}</Credits>
           </p>
         ) : (
           <p>
-            Memorizing in the ESV?{' '}
-            <button type="button" className="link" onClick={() => props.onTranslation('ESV')}>
+            Memorizing in the ESV?{" "}
+            <button
+              type="button"
+              className="link"
+              onClick={() => props.onTranslation("ESV")}
+            >
               Add a free key
             </button>
             . {translation} text is in the public domain.
+            {tagged && (
+              <>
+                {" "}
+                <Credits>{credits}</Credits>
+              </>
+            )}
           </p>
         )}
         <Backup />
@@ -442,16 +610,18 @@ export const PageView = (props: PageViewProps) => {
         chapter={chapter}
         selection={selection}
         onLearn={learnSelection}
-        onRecite={([from, to]) => props.onStart([{ kind: 'run', chapter, from, to }])}
+        onRecite={([from, to]) =>
+          props.onStart([{ kind: "run", chapter, from, to }])
+        }
       />
     </div>
-  )
-}
+  );
+};
 
 interface GreekWordSpanProps {
-  text: string
-  open: boolean
-  onOpen: (anchor: HTMLElement) => void
+  text: string;
+  open: boolean;
+  onOpen: (anchor: HTMLElement) => void;
 }
 
 const GreekWordSpan = ({ text, open, onOpen }: GreekWordSpanProps) => (
@@ -459,41 +629,47 @@ const GreekWordSpan = ({ text, open, onOpen }: GreekWordSpanProps) => (
     role="button"
     tabIndex={0}
     aria-pressed={open}
-    className={`g ${open ? 'on' : ''}`}
+    className={`g ${open ? "on" : ""}`}
     onClick={(e) => onOpen(e.currentTarget)}
     onKeyDown={(e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault()
-        onOpen(e.currentTarget)
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onOpen(e.currentTarget);
       }
     }}
   >
     {text}
   </span>
-)
+);
 
 interface VerseSlipProps {
-  book: Book
-  chapter: number
-  selection?: [number, number]
-  onLearn: (selection: [number, number]) => void
-  onRecite: (selection: [number, number]) => void
+  book: Book;
+  chapter: number;
+  selection?: [number, number];
+  onLearn: (selection: [number, number]) => void;
+  onRecite: (selection: [number, number]) => void;
 }
 
 // Holds on to the last selection so the slip can animate away after it is cleared.
-const VerseSlip = ({ book, chapter, selection, onLearn, onRecite }: VerseSlipProps) => {
-  const [held, setHeld] = useState(selection)
-  if (selection && selection !== held) setHeld(selection)
-  if (!selection && held && prefersStillness()) setHeld(undefined)
-  if (!held) return null
-  const leaving = selection ? '' : 'dock-leaving'
+const VerseSlip = ({
+  book,
+  chapter,
+  selection,
+  onLearn,
+  onRecite,
+}: VerseSlipProps) => {
+  const [held, setHeld] = useState(selection);
+  if (selection && selection !== held) setHeld(selection);
+  if (!selection && held && prefersStillness()) setHeld(undefined);
+  if (!held) return null;
+  const leaving = selection ? "" : "dock-leaving";
   return (
     <>
       <div className={`dock-veil ${leaving}`} aria-hidden="true" />
       <aside
         className={`dock ${leaving}`}
         onAnimationEnd={(e) => {
-          if (!selection && e.target === e.currentTarget) setHeld(undefined)
+          if (!selection && e.target === e.currentTarget) setHeld(undefined);
         }}
       >
         <div className="dock-slip">
@@ -502,44 +678,54 @@ const VerseSlip = ({ book, chapter, selection, onLearn, onRecite }: VerseSlipPro
             {held[1] !== held[0] && `–${held[1]}`}
           </span>
           <span className="dock-actions">
-            <button type="button" className="primary" onClick={() => onLearn(held)}>
+            <button
+              type="button"
+              className="primary"
+              onClick={() => onLearn(held)}
+            >
               Learn
             </button>
-            <button type="button" className="quiet" onClick={() => onRecite(held)}>
+            <button
+              type="button"
+              className="quiet"
+              onClick={() => onRecite(held)}
+            >
               Recite
             </button>
           </span>
         </div>
       </aside>
     </>
-  )
-}
+  );
+};
 
 interface KeyFormProps {
-  translation: Translation
-  message: string
-  onSaved: () => void
+  translation: Translation;
+  message: string;
+  onSaved: () => void;
 }
 
 const KeyForm = ({ translation, message, onSaved }: KeyFormProps) => {
-  const [value, setValue] = useState(getKey(translation))
-  const source = translation.keySource!
+  const [value, setValue] = useState(getKey(translation));
+  const source = translation.keySource!;
   return (
     <form
       className="key-form"
       onSubmit={(e) => {
-        e.preventDefault()
-        setKey(translation, value)
-        onSaved()
+        e.preventDefault();
+        setKey(translation, value);
+        onSaved();
       }}
     >
       <h2>The {translation.id} needs a key</h2>
       <p>
-        {message || `${source.lender} lends this text out one key at a time.`} Create a free one at{' '}
+        {message || `${source.lender} lends this text out one key at a time.`}{" "}
+        Create a free one at{" "}
         <a href={source.url} target="_blank" rel="noreferrer">
           {source.site}
-        </a>{' '}
-        and paste it here. It stays in this browser, which then talks to {source.lender} directly.
+        </a>{" "}
+        and paste it here. It stays in this browser, which then talks to{" "}
+        {source.lender} directly.
       </p>
       <input
         value={value}
@@ -553,5 +739,5 @@ const KeyForm = ({ translation, message, onSaved }: KeyFormProps) => {
         Open the {translation.id}
       </button>
     </form>
-  )
-}
+  );
+};

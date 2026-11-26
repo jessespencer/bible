@@ -968,6 +968,12 @@ async function loadTexts() {
   renderCompanion();
 }
 
+// The About dialog stands as the credits page: the ESV line's Credits opens it at Crossway's notice.
+function openEsvAbout() {
+  (document.getElementById('about') as HTMLDialogElement).showModal();
+  document.getElementById('about-esv')!.scrollIntoView({ block: 'center' });
+}
+
 function chooseTranslation(next: Translation, fromPicker: boolean) {
   translation = next;
   setReading({
@@ -979,7 +985,7 @@ function chooseTranslation(next: Translation, fromPicker: boolean) {
   translationPicker?.set(next);
   const source = document.getElementById('companion-source')!;
   source.textContent = next.remote ? '' : `${next.name} · ${next.license}`;
-  if (next.remote) appendEsvCredit(source);
+  if (next.remote) appendEsvCredit(source, openEsvAbout);
   if (!fromPicker) return;
   saveTranslation(next);
   texts = null;

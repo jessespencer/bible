@@ -6,7 +6,8 @@
  *   same way, so what a page can show stays inside it too. The least recently read verses go first.
  * - No more than 60 requests a minute or 1,000 an hour, so requests wait their turn.
  * - Each quotation carries the letters "ESV", and each page that shows the text links to
- *   www.esv.org beside Crossway's notice (`appendEsvCredit`).
+ *   www.esv.org (`appendEsvCredit`). The full notice sits a tap away, on a credits page or dialog,
+ *   as Crossway asks for it on a copyright page, not beside the text.
  * Verses are counted in KJV numbering, as in every bundled file, which the ESV follows.
  */
 
@@ -29,18 +30,58 @@ export const ESV_COPYRIGHT =
 /** The letters Crossway asks for with each quotation. */
 export const ESV_MARK = "(ESV)";
 
-/**
- * Crossway's notice and the link to www.esv.org that every page showing the text needs.
- * `full` adds the rest of the copyright-page notice.
- */
-export const appendEsvCredit = (parent: HTMLElement, full = false): void => {
-  parent.append(`${full ? ESV_COPYRIGHT : ESV_NOTICE} `);
+/** Opens a dialog with Crossway's full notice, for an app without a credits page of its own. */
+export const openEsvCredits = (): void => {
+  let dialog = document.querySelector<HTMLDialogElement>("dialog.bui-credits");
+  if (!dialog) {
+    dialog = document.createElement("dialog");
+    dialog.className = "bui-credits";
+    dialog.setAttribute("aria-labelledby", "bui-credits-title");
+    const form = document.createElement("form");
+    form.method = "dialog";
+    const close = document.createElement("button");
+    close.className = "bui-credits__close";
+    close.setAttribute("aria-label", "Close");
+    close.textContent = "×";
+    form.append(close);
+    const title = document.createElement("h2");
+    title.id = "bui-credits-title";
+    title.textContent = "Credits";
+    const notice = document.createElement("p");
+    notice.append(`${ESV_COPYRIGHT} `, esvLink("www.esv.org"));
+    dialog.append(form, title, notice);
+    // A tap on the backdrop lands on the dialog itself.
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) dialog!.close();
+    });
+    document.body.append(dialog);
+  }
+  dialog.showModal();
+};
+
+const esvLink = (label: string): HTMLAnchorElement => {
   const link = document.createElement("a");
   link.href = ESV_SITE;
   link.target = "_blank";
   link.rel = "noopener";
-  link.textContent = "www.esv.org";
-  parent.append(link);
+  link.textContent = label;
+  return link;
+};
+
+/**
+ * The quiet line every page showing ESV text carries: Crossway's name, the www.esv.org link it
+ * asks for, and a way to the full notice. `onCredits` opens the app's own credits page; without
+ * one, `openEsvCredits` shows the notice.
+ */
+export const appendEsvCredit = (parent: HTMLElement, onCredits: () => void = openEsvCredits): void => {
+  const line = document.createElement("span");
+  line.className = "bui-esv-credit";
+  const credits = document.createElement("button");
+  credits.type = "button";
+  credits.textContent = "Credits";
+  credits.addEventListener("click", onCredits);
+  line.append("ESV® Bible © Crossway · ", esvLink("esv.org"), " · ", credits);
+  parent.append(line);
 };
 
 /** Thrown when there is no key, or Crossway refuses the one given. */

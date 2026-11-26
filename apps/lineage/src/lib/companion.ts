@@ -135,7 +135,12 @@ export const initCompanion = (
   let shown: { figure: TimelineFigure; alongside: TimelineFigure[] } | null = null;
   const showSource = () => {
     source.textContent = translation.remote ? "" : `${translation.name} · ${translation.license}`;
-    if (translation.remote) appendEsvCredit(source);
+    // The About dialog stands as the credits page: Credits opens it at Crossway's notice.
+    if (translation.remote)
+      appendEsvCredit(source, () => {
+        document.querySelector<HTMLDialogElement>("#about")!.showModal();
+        document.querySelector("#about-esv")!.scrollIntoView({ block: "center" });
+      });
   };
   showSource();
   createTranslationPicker({

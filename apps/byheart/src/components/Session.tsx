@@ -17,6 +17,7 @@ import { Heart } from './Heart'
 import { Footnotes } from './Footnotes'
 import { PassageText, type Reveal } from './PassageText'
 import { OrderStage, ReciteStage, TypedStage, VanishStage, canSpeak } from './stages'
+import { CreditLinks } from './Credits'
 
 export interface SessionItem {
   kind: 'learn' | 'review' | 'run'
@@ -314,15 +315,15 @@ export const Session = ({ items: asked, book, translation, progress, onRecord, o
       <section className="stage">{renderStage()}</section>
       <footer className="session-hint">
         {item.kind === 'run' ? 'First letter of every word. Two misses and the word is given to you.' : STAGE_HINTS[stage]}
-        {credited.links?.map((link) => (
-          <span key={link.url}>
-            {' '}
-            <a href={link.url} target="_blank" rel="noreferrer">
-              {link.label}
-            </a>
-          </span>
-        ))}
-        {credited.creditOnRecitals && <p className="session-credit">{credited.credit}</p>}
+        {credited.creditOnRecitals ? (
+          <p className="session-credit">{credited.credit}</p>
+        ) : (
+          credited.links && (
+            <p className="session-credit">
+              <CreditLinks translation={credited} />
+            </p>
+          )
+        )}
         <Footnotes verses={verses} />
       </footer>
     </main>
