@@ -12,7 +12,7 @@ import {
   type Stage,
   type VerseRecord,
 } from '../lib/memory'
-import { askedLabel, recordTest, scoreSpeech, scoreVerses, testKey, type TestMode, type TestRecord, type VerseScore } from '../lib/score'
+import { askedLabel, emptyHeard, logRecital, recordTest, scoreSpeech, scoreVerses, testKey, type TestMode, type TestRecord, type VerseScore } from '../lib/score'
 import { loadSettings, saveSettings, type Settings, type Typing } from '../lib/settings'
 import { pickBlanks, senseLines, tokenize } from '../lib/text'
 import { Back } from './Back'
@@ -85,7 +85,7 @@ export const Session = ({ items: asked, book, translation, progress, onRecord, o
   const [micProblem, setMicProblem] = useState('')
   const scores = useRef<VerseScore[]>([])
   const typedSoFar = useRef<TypedProgress>(emptyTyped())
-  const heardSoFar = useRef('')
+  const heardSoFar = useRef({ transcript: '', live: emptyHeard() })
   const flourishTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const speakable = canSpeak()
@@ -177,7 +177,7 @@ export const Session = ({ items: asked, book, translation, progress, onRecord, o
     setAttempt(0)
     setSpeaking(false)
     typedSoFar.current = emptyTyped()
-    heardSoFar.current = ''
+    heardSoFar.current = { transcript: '', live: emptyHeard() }
     if (next) setStage(startStage(next, verseKey(translation, book.code, next.chapter, next.from)))
     else if (isTest) finishTest()
   }
@@ -253,7 +253,9 @@ export const Session = ({ items: asked, book, translation, progress, onRecord, o
       setFlourish(undefined)
     } else if (tokens.length) {
       if (testMode === 'speaking') {
-        const { reached, missed } = scoreSpeech(tokens, heardSoFar.current)
+        const { transcript, live } = heardSoFar.current
+        const { reached, missed } = scoreSpeech(tokens, transcript, false, live)
+        logRecital(tokens, transcript, live, { reached, missed })
         gradeRun(reached, missed, new Set())
       } else {
         const { reached, helped, typos } = typedSoFar.current
@@ -387,7 +389,7 @@ export const Session = ({ items: asked, book, translation, progress, onRecord, o
           lines={lines}
           verseNumbers={verseNumbers}
           onDone={(missed) => finishTyped(missed)}
-          onHeard={(transcript) => (heardSoFar.current = transcript)}
+          onHeard={(transcript, live) => (heardSoFar.current = { transcript, live })}
           onCancel={isTest ? undefined : () => setSpeaking(false)}
           onProblem={isTest ? setMicProblem : undefined}
         />

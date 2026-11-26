@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { senseLines, tokenize } from '../lib/text'
-import { TypedStage } from './stages'
+import { ReciteStage, TypedStage } from './stages'
 
 const tokens = tokenize(['Grace to you and peace from God our Father.'])
 
@@ -56,5 +56,43 @@ describe('TypedStage with whole words', () => {
     expect(document.querySelector('.w-helped')).toHaveTextContent('to')
     await userEvent.type(input, 'you and peace from God our Father')
     expect(onDone).toHaveBeenCalledWith(new Set([1]), new Set())
+  })
+})
+
+describe('ReciteStage', () => {
+  // A stand-in for the browser's recogniser that lets a test say what it heard.
+  class FakeRecognition {
+    static last: FakeRecognition
+    continuous = false
+    interimResults = false
+    lang = ''
+    onresult: ((e: { results: { 0: { transcript: string }; isFinal: boolean }[] }) => void) | null = null
+    onerror = null
+    onend = null
+    constructor() {
+      FakeRecognition.last = this
+    }
+    start() {}
+    stop() {}
+    hear(...results: string[]) {
+      act(() => this.onresult?.({ results: results.map((transcript) => ({ 0: { transcript }, isFinal: true })) }))
+    }
+  }
+
+  afterEach(() => {
+    delete (window as unknown as Record<string, unknown>).SpeechRecognition
+  })
+
+  it('keeps what was heard when the browser starts its results afresh mid-recital', () => {
+    ;(window as unknown as Record<string, unknown>).SpeechRecognition = FakeRecognition
+    const onHeard = vi.fn()
+    render(<ReciteStage tokens={tokens} lines={senseLines(tokens)} onDone={vi.fn()} onHeard={onHeard} onProblem={vi.fn()} />)
+    FakeRecognition.last.hear('grace to you', 'and peace')
+    // Safari can drop the earlier results without ending the session.
+    FakeRecognition.last.hear('from god')
+    const [transcript, live] = onHeard.mock.lastCall!
+    expect(transcript).toMatch(/grace to you and peace\s+from god/)
+    expect(live.position).toBe(7)
+    expect(live.matched.size).toBe(7)
   })
 })

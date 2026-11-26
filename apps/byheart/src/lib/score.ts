@@ -73,13 +73,49 @@ export const alignSpeech = (tokens: Token[], transcript: string) => {
   return { position, skipped }
 }
 
+// What the live follower saw over a whole recital: every word it ever matched, and how far it got.
+export interface HeardLive {
+  matched: Set<number>
+  position: number
+  // How the recogniser behaved, for the console log at the end of a spoken test.
+  restarts: number
+  resets: number
+  errors: string[]
+}
+
+export const emptyHeard = (): HeardLive => ({ matched: new Set(), position: 0, restarts: 0, resets: 0, errors: [] })
+
+// A spoken test that scores oddly can be traced from the console: how much was heard, how the
+// recogniser behaved, and how the final score compares with what was matched live.
+export const logRecital = (tokens: Token[], transcript: string, live: HeardLive, score: { reached: number; missed: Set<number> }) => {
+  console.info('By Heart spoken test', {
+    words: tokens.length,
+    heardWords: heardWords(transcript).length,
+    liveMatched: live.matched.size,
+    livePosition: live.position,
+    scoredReached: score.reached,
+    scoredMissed: score.missed.size,
+    restarts: live.restarts,
+    resultResets: live.resets,
+    errors: live.errors,
+    transcript,
+  })
+}
+
+// Folds one live alignment into the record. It only grows, so a transcript the browser later
+// loses or rewrites cannot take back a word you were seen to say.
+export const noteHeard = (heard: HeardLive, tokens: Token[], live: { position: number; skipped: Set<number> }) => {
+  for (let i = 0; i < live.position; i++) if (!live.skipped.has(tokens[i].id)) heard.matched.add(tokens[i].id)
+  heard.position = Math.max(heard.position, live.position)
+}
+
 /**
  * Scores a whole recital once it is over. Unlike the live follower it sees everything at
  * once, so it lines the transcript up with the text the way a diff does and a skipped phrase
  * costs only its own words. A stray word matched far ahead, alone, does not count as reaching
  * that far: only matches with a neighbour close by do.
  */
-export const scoreSpeech = (tokens: Token[], transcript: string, finished = false) => {
+export const scoreSpeech = (tokens: Token[], transcript: string, finished = false, live: HeardLive = emptyHeard()) => {
   const words = tokens.map((t) => cleanWord(t.word))
   const heard = heardWords(transcript)
   const n = heard.length
@@ -116,7 +152,10 @@ export const scoreSpeech = (tokens: Token[], transcript: string, finished = fals
       if (near(matched[k - 1]) || near(matched[k + 1])) reached = index + 1
     })
   }
+  // Whatever was matched live counts too: the final score never falls below what you watched.
+  reached = Math.max(reached, live.position)
   const hit = new Set(matched)
+  tokens.forEach((t, index) => live.matched.has(t.id) && hit.add(index))
   const missed = new Set<number>()
   for (let t = 0; t < reached; t++) if (!hit.has(t)) missed.add(tokens[t].id)
   return { reached, missed }
