@@ -27,6 +27,7 @@ import { Backup } from "./Backup";
 import { CreditLinks, Credits } from "./Credits";
 import { Footnotes } from "./Footnotes";
 import { GreekNote } from "./GreekNote";
+import { LeafSkeleton } from "./LeafSkeleton";
 import { BookPicker, TranslationPicker } from "./Picker";
 import type { SessionItem } from "./Session";
 
@@ -54,6 +55,7 @@ export const PageView = (props: PageViewProps) => {
   const { book, chapter, translation, progress, theme } = props;
   const [loaded, setLoaded] = useState<{
     id: string;
+    book: string;
     verses: Verse[];
     turned: boolean;
   }>();
@@ -77,7 +79,8 @@ export const PageView = (props: PageViewProps) => {
   }>();
   const [found, setFound] = useState<{ chapter: number; verse: number }>();
   const [partChoice, setPartChoice] = useState<{ id: string; part: number }>();
-  const printed = useRef(false);
+  // Which book the page last printed, so a new one rises in rather than cross-fading.
+  const printed = useRef<string>(undefined);
   // An ESV chapter longer than half its book is printed in parts, one at a time.
   const parts = chapterParts(translation, book, chapter);
   const chapterId = `${translation}:${book.code}:${chapter}`;
@@ -89,8 +92,9 @@ export const PageView = (props: PageViewProps) => {
   const pageId = `${chapterId}:${part}:${keyAttempt}`;
   const selection = chosen?.id === pageId ? chosen.range : undefined;
   const problem = failure?.id === pageId ? failure : undefined;
-  // The last page stays printed while the next one loads, so the page never collapses between them.
-  const held = problem ? undefined : loaded;
+  // The last page stays printed while the next chapter loads, so the page never collapses between them.
+  // Another book's words would be the wrong ones, so a skeleton holds its place instead.
+  const held = problem || loaded?.book !== book.code ? undefined : loaded;
   const waiting = !!held && held.id !== pageId;
   const verses = held?.verses ?? [];
   const opening = !held && !problem;
@@ -105,10 +109,10 @@ export const PageView = (props: PageViewProps) => {
         if (!live.current) return;
         // Turning from one page to the next cross-fades the text in place and eases what sits below it.
         // Otherwise, as on the first page, the text rises into place.
-        const turned = printed.current && canTransition();
-        printed.current = true;
+        const turned = printed.current === book.code && canTransition();
+        printed.current = book.code;
         const show = () => {
-          setLoaded({ id: pageId, verses: v, turned });
+          setLoaded({ id: pageId, book: book.code, verses: v, turned });
           setFailure(undefined);
         };
         if (turned) withTransition("page", show);
@@ -445,6 +449,8 @@ export const PageView = (props: PageViewProps) => {
         />
       ) : problem ? (
         <p className="session-message">{problem.message}</p>
+      ) : opening ? (
+        <LeafSkeleton drop={part === 0 ? chapterName(book, chapter) : undefined} />
       ) : (
         <article
           className={`leaf ${greekReady ? "leaf-greek" : ""} ${waiting ? "leaf-waiting" : ""} ${held?.turned ? "" : "leaf-arrive"}`}

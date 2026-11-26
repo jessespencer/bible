@@ -69,6 +69,24 @@ describe('PageView', () => {
     expect(leaf()).not.toHaveClass('leaf-waiting')
   })
 
+  it('holds the page with a skeleton while another book loads, then lets its words rise in', async () => {
+    const { rerender } = render(page('BSB'))
+    await screen.findByText(/BSB words of 1:1/)
+
+    const next = held()
+    fetchChapter.mockReturnValueOnce(next.promise)
+    rerender(page('BSB', 'PHP'))
+
+    expect(screen.queryByText(/BSB words of 1:1/)).not.toBeInTheDocument()
+    expect(leaf()).toHaveClass('leaf-skeleton')
+    expect(leaf()).toHaveAttribute('aria-busy', 'true')
+    expect(screen.getByRole('button', { name: 'Opening the book…' })).toBeDisabled()
+
+    await act(async () => next.finish(chapterIn('BSB')))
+    expect(leaf()).not.toHaveClass('leaf-skeleton')
+    expect(leaf()).toHaveClass('leaf-arrive')
+  })
+
   it('does not start a session from a page that is still giving way', async () => {
     const { rerender } = render(page('BSB'))
     await screen.findByText(/BSB words of 1:1/)

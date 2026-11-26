@@ -738,6 +738,22 @@ kbd {
   transition: opacity 0.3s ease 0.15s;
 }
 
+/* While a new book or translation is fetched, faint bars in the shape of words hold the page.
+   They wait a beat before showing, so a quick load goes straight to text with nothing in between. */
+.leaf-skeleton {
+  text-align: justify;
+  animation: veil-in 0.4s ease 0.15s backwards;
+}
+
+.skeleton-word {
+  display: inline-block;
+  height: 0.5em;
+  border-radius: 2px;
+  background: var(--ink);
+  opacity: 0.08;
+  animation: breathe 1.8s ease-in-out infinite;
+}
+
 .drop {
   float: left;
   font-family: var(--display);
@@ -1958,6 +1974,12 @@ kbd {
   from {
     opacity: 0;
     transform: scale(0.2);
+  }
+}
+
+@keyframes breathe {
+  50% {
+    opacity: 0.15;
   }
 }
 
