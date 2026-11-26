@@ -15,6 +15,8 @@ export default defineConfig(({ command }) => ({
   plugins: [renderBlockingEntry()],
   // Pinned beside Atlas (5173), Lineage (5174) and By Heart (5175), so the app switcher can link across.
   server: { port: 5176, strictPort: true },
+  // Keys live in one .env.local at the repo root, shared by every app.
+  envDir: "../..",
   // Like Lineage: in production Atlas's data sits beside us in ../atlas/; dev serves Atlas's public folder here.
   publicDir: command === "serve" ? "../atlas/public" : "public",
 }));

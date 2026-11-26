@@ -15,6 +15,8 @@ export default defineConfig({
   plugins: [renderBlockingEntry()],
   // Pinned so the bible-ui app switcher can link across dev servers.
   server: { port: 5173, strictPort: true },
+  // Keys live in one .env.local at the repo root, shared by every app.
+  envDir: '../..',
   root: '.',
   publicDir: 'public',
   build: {

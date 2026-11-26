@@ -4,3 +4,6 @@ raw-data
 *.zip
 .vite
 .DS_Store
+
+# Local keys, such as VITE_ESV_KEY
+*.local
