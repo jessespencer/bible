@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { getBook } from './bible'
-import { alignSpeech, askedLabel, judgeWord, loadTests, recordTest, scoreSpeech, scoreVerses } from './score'
+import { alignSpeech, askedLabel, emptyHeard, noteHeard, judgeWord, loadTests, recordTest, scoreSpeech, scoreVerses } from './score'
 import { tokenize } from './text'
 
 const passage = tokenize([
@@ -43,6 +43,16 @@ describe('scoreSpeech', () => {
   it('does not count a stray word far ahead as reaching it', () => {
     const { reached } = scoreSpeech(passage, 'in him we have redemption okay grace')
     expect(reached).toBe(5)
+  })
+
+  it('never scores below what the live follower matched, even if the transcript later loses it', () => {
+    const live = emptyHeard()
+    const whole = 'in him we have redemption through his blood the forgiveness of our trespasses'
+    noteHeard(live, passage, alignSpeech(passage, whole))
+    // The browser drops the start of the recital from its results.
+    const { reached, missed } = scoreSpeech(passage, 'the forgiveness of our trespasses', false, live)
+    expect(reached).toBe(13)
+    expect(missed.size).toBe(0)
   })
 
   it('scores to the end once the recital is finished', () => {

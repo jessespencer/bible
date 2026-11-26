@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { prefersStillness } from '../lib/motion'
-import { alignSpeech, judgeWord, scoreSpeech } from '../lib/score'
+import { alignSpeech, emptyHeard, judgeWord, logRecital, noteHeard, scoreSpeech, type HeardLive } from '../lib/score'
 import type { Typing } from '../lib/settings'
 import { cleanWord, shuffled, vanishOrder, type Token } from '../lib/text'
 import { VoiceMeter } from './VoiceMeter'
@@ -345,7 +345,7 @@ interface ReciteStageProps {
   lines: Token[][]
   verseNumbers?: number[]
   onDone: (missed: Set<number>) => void
-  onHeard?: (transcript: string) => void
+  onHeard?: (transcript: string, live: HeardLive) => void
   onCancel?: () => void
   // When given, whatever holds the stage shows the listening state, and the stage does not.
   onProblem?: (problem: string) => void
@@ -364,23 +364,36 @@ export const ReciteStage = ({ tokens, lines, verseNumbers, onDone, onHeard, onCa
     let active = true
     let heardBefore = ''
     let session = ''
+    let sessionLength = 0
+    const live = emptyHeard()
     recognition.continuous = true
     recognition.interimResults = true
     recognition.lang = 'en-US'
     recognition.onresult = (e) => {
+      // Some browsers (Safari especially) start the list of results afresh mid-recital without
+      // ending the session. Keep what was heard before the list shrank.
+      if (e.results.length < sessionLength) {
+        heardBefore = `${heardBefore} ${session}`
+        live.resets += 1
+      }
+      sessionLength = e.results.length
       session = Array.from(e.results, (r) => r[0].transcript).join(' ')
       const transcript = `${heardBefore} ${session}`
       const next = alignSpeech(latest.current.tokens, transcript)
+      noteHeard(live, latest.current.tokens, next)
       setProgress(next)
-      latest.current.onHeard?.(transcript)
+      latest.current.onHeard?.(transcript, live)
       if (next.position === latest.current.tokens.length) {
         active = false
         recognition.stop()
         // The live follower only looks ahead a little; the final score lines up the whole recital.
-        latest.current.onDone(scoreSpeech(latest.current.tokens, transcript, true).missed)
+        const score = scoreSpeech(latest.current.tokens, transcript, true, live)
+        logRecital(latest.current.tokens, transcript, live, score)
+        latest.current.onDone(score.missed)
       }
     }
     recognition.onerror = (e) => {
+      live.errors.push(e.error)
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
         active = false
         setProblem('The microphone is blocked for this page.')
@@ -392,7 +405,13 @@ export const ReciteStage = ({ tokens, lines, verseNumbers, onDone, onHeard, onCa
       if (!active) return
       heardBefore = `${heardBefore} ${session}`
       session = ''
-      recognition.start()
+      sessionLength = 0
+      live.restarts += 1
+      try {
+        recognition.start()
+      } catch (error) {
+        live.errors.push(`restart failed: ${String(error)}`)
+      }
     }
     recognition.start()
     return () => {
