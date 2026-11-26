@@ -5,7 +5,8 @@
 
 export type ShareResult = "shared" | "copied" | "failed";
 
-const copy = async (text: string): Promise<boolean> => {
+/** Text to the clipboard, falling back to the older copy command where the API is refused. */
+export const copyText = async (text: string): Promise<boolean> => {
   try {
     await navigator.clipboard.writeText(text);
     return true;
@@ -31,5 +32,5 @@ export const shareView = async (title: string, url = location.href): Promise<Sha
       if (error instanceof DOMException && error.name === "AbortError") return "shared";
     }
   }
-  return (await copy(url)) ? "copied" : "failed";
+  return (await copyText(url)) ? "copied" : "failed";
 };

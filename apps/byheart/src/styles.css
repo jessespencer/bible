@@ -889,11 +889,48 @@ kbd {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-right: 0.9rem;
+  padding-right: 0.35rem;
   font-family: var(--display);
   font-style: italic;
   font-size: 1.2rem;
   white-space: nowrap;
+}
+
+/* Copy, beside the reference: the words of the chosen verses, with their reference. */
+.dock-copy {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.55rem;
+  border-radius: 4px;
+  color: color-mix(in srgb, var(--slip-ink) 62%, transparent);
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.dock-copy svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dock-copy:hover:not(:disabled) {
+  color: var(--slip-ink);
+  background: color-mix(in srgb, var(--slip-ink) 9%, transparent);
+}
+
+.dock-copy.dock-copy-done,
+.dock-copy.dock-copy-failed {
+  color: var(--slip-accent);
+}
+
+.dock-copy:focus-visible {
+  outline-color: var(--slip-accent);
 }
 
 .dock-actions {
