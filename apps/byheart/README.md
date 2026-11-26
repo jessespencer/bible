@@ -42,7 +42,7 @@ The ESV needs a free key from [api.esv.org](https://api.esv.org/account/create-a
 
 - ESV text is never written to disk. In memory the app holds at most two chapters, and never more than that limit of any one book, letting go of the older chapter first (Jonah 1 and 2 together would pass half of Jonah).
 - A chapter longer than half its book is printed in parts of even length, which you turn between under the chapter numbers or from the foot of the page. Recitals and Where is it? load one part at a time too. Only Obadiah, Haggai 2, Philemon, 2 and 3 John and Jude need this; the exemption for one- and two-chapter books covers a single request, not what is shown.
-- Every screen with ESV text carries Crossway's notice and a link to www.esv.org. The page's colophon gives the full notice, and the text there and in Where is it? ends with "(ESV)".
+- Every screen with ESV text carries a short credit and a link to www.esv.org. The full notice, with the Greek tags' credits, is in the colophon's Credits dialog, the app's copyright page. The text on the page and in Where is it? ends with "(ESV)".
 
 NIV, NKJV and NLT come through [API.Bible](https://api.bible), which needs a free key and allows only non-commercial use on its free plan. Like the ESV, this text stays in memory, two chapters at most, and each view is reported through API.Bible's FUMS tracker. Their footnotes appear under the text.
 

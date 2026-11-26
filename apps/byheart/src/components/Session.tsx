@@ -21,6 +21,7 @@ import { Footnotes } from './Footnotes'
 import { PassageText, type Reveal } from './PassageText'
 import { OrderStage, ReciteStage, TypedStage, VanishStage, canSpeak, type TypedProgress } from './stages'
 import { Scorecard, TestBanner, TestReady } from './Test'
+import { CreditLinks } from './Credits'
 
 export interface SessionItem {
   kind: 'learn' | 'review' | 'run'
@@ -307,12 +308,15 @@ export const Session = ({ items: asked, book, translation, progress, onRecord, o
           {endActions}
         </Scorecard>
         <footer className="session-hint">
-          {credited.links?.map((link) => (
-            <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
-              {link.label}
-            </a>
-          ))}
-          {credited.creditOnRecitals && <p className="session-credit">{credited.credit}</p>}
+          {credited.creditOnRecitals ? (
+            <p className="session-credit">{credited.credit}</p>
+          ) : (
+            credited.links && (
+              <p className="session-credit">
+                <CreditLinks translation={credited} />
+              </p>
+            )
+          )}
         </footer>
       </main>
     )
@@ -464,15 +468,15 @@ export const Session = ({ items: asked, book, translation, progress, onRecord, o
       <section className="stage">{renderStage()}</section>
       <footer className="session-hint">
         {hint()}
-        {credited.links?.map((link) => (
-          <span key={link.url}>
-            {' '}
-            <a href={link.url} target="_blank" rel="noreferrer">
-              {link.label}
-            </a>
-          </span>
-        ))}
-        {credited.creditOnRecitals && <p className="session-credit">{credited.credit}</p>}
+        {credited.creditOnRecitals ? (
+          <p className="session-credit">{credited.credit}</p>
+        ) : (
+          credited.links && (
+            <p className="session-credit">
+              <CreditLinks translation={credited} />
+            </p>
+          )
+        )}
         {!ready && <Footnotes verses={verses} />}
       </footer>
       {isTest && !ready && <div className="test-banner-room" aria-hidden="true" />}

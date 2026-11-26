@@ -23,8 +23,10 @@ export interface Translation {
   creditOnRecitals?: boolean
   // What the rights holder asks to be shown with the text. Public domain needs neither.
   credit?: string
-  // The longer notice for the page's colophon, which stands as the app's copyright page.
+  // The longer notice for the Credits dialog, which stands as the app's copyright page.
   copyright?: string
+  // A short credit for beside the text, where the full notice is a tap away. Defaults to the name.
+  line?: string
   links?: { label: string; url: string }[]
 }
 
@@ -40,9 +42,10 @@ export const TRANSLATIONS: Translation[] = [
     keySource: { lender: 'Crossway', site: 'api.esv.org', url: 'https://api.esv.org/account/create-application/' },
     credit: ESV_NOTICE,
     copyright: `${ESV_NOTICE} The ESV text may not be quoted in any publication made available to the public by a Creative Commons license. The ESV may not be translated into any other language. Users may not copy or download more than 500 verses of the ESV Bible or more than one half of any book of the ESV Bible.`,
-    // Crossway asks for its notice and a link to www.esv.org on every page that uses the text.
-    creditOnRecitals: true,
-    links: [{ label: 'www.esv.org', url: 'https://www.esv.org' }],
+    // Crossway asks for a link to www.esv.org on every page that uses the text, and its full
+    // notice on a copyright page: here, the Credits dialog.
+    line: 'ESV® Bible © Crossway',
+    links: [{ label: 'esv.org', url: 'https://www.esv.org' }],
   },
   {
     id: 'NIV',

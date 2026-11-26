@@ -149,6 +149,67 @@ kbd {
   text-decoration: underline;
 }
 
+/* Credits beside the text read as the line they sit in, not as a call to act. */
+.quiet,
+.link.quiet {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--hair);
+  text-underline-offset: 3px;
+}
+
+.quiet:hover,
+.link.quiet:hover {
+  text-decoration-color: currentColor;
+}
+
+/* The Credits dialog stands as the app's copyright page. */
+.credits {
+  margin: auto;
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 3rem);
+  padding: 1.75rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.credits::backdrop {
+  background: color-mix(in srgb, var(--paper) 70%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.credits h2 {
+  margin: 0 0 0.75rem;
+  padding-right: 1.5rem;
+  font-family: var(--display);
+  font-size: 1.6rem;
+  font-weight: 400;
+}
+
+.credits p + p {
+  margin-top: 0.6rem;
+}
+
+.credits-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.9rem;
+  background: none;
+  border: none;
+  color: var(--soft);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.credits-close:hover {
+  color: var(--ink);
+}
+
 /* The page */
 
 .page {
@@ -677,6 +738,22 @@ kbd {
   transition: opacity 0.3s ease 0.15s;
 }
 
+/* While a new book or translation is fetched, faint bars in the shape of words hold the page.
+   They wait a beat before showing, so a quick load goes straight to text with nothing in between. */
+.leaf-skeleton {
+  text-align: justify;
+  animation: veil-in 0.4s ease 0.15s backwards;
+}
+
+.skeleton-word {
+  display: inline-block;
+  height: 0.5em;
+  border-radius: 2px;
+  background: var(--ink);
+  opacity: 0.08;
+  animation: breathe 1.8s ease-in-out infinite;
+}
+
 .drop {
   float: left;
   font-family: var(--display);
@@ -828,11 +905,48 @@ kbd {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-right: 0.9rem;
+  padding-right: 0.35rem;
   font-family: var(--display);
   font-style: italic;
   font-size: 1.2rem;
   white-space: nowrap;
+}
+
+/* Copy, beside the reference: the words of the chosen verses, with their reference. */
+.dock-copy {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.55rem;
+  border-radius: 4px;
+  color: color-mix(in srgb, var(--slip-ink) 62%, transparent);
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.dock-copy svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dock-copy:hover:not(:disabled) {
+  color: var(--slip-ink);
+  background: color-mix(in srgb, var(--slip-ink) 9%, transparent);
+}
+
+.dock-copy.dock-copy-done,
+.dock-copy.dock-copy-failed {
+  color: var(--slip-accent);
+}
+
+.dock-copy:focus-visible {
+  outline-color: var(--slip-accent);
 }
 
 .dock-actions {
@@ -2258,6 +2372,12 @@ kbd {
   from {
     opacity: 0;
     transform: scale(0.2);
+  }
+}
+
+@keyframes breathe {
+  50% {
+    opacity: 0.15;
   }
 }
 

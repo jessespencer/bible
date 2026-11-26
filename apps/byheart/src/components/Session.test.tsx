@@ -44,12 +44,12 @@ describe('Session in the ESV', () => {
     expect(fetchChapter).toHaveBeenCalledTimes(1)
   })
 
-  it('carries Crossway’s notice and a link to www.esv.org beside the text', async () => {
+  it('carries a quiet credit and a link to www.esv.org beside the text', async () => {
     await recite('ESV')
     await screen.findByRole('heading', { name: 'Jude 1:1–9' })
     const hint = document.querySelector('.session-hint') as HTMLElement
-    expect(hint).toHaveTextContent(/Scripture quotations are from the ESV® Bible/)
-    expect(screen.getByRole('link', { name: 'www.esv.org' })).toHaveAttribute('href', 'https://www.esv.org')
+    expect(hint).toHaveTextContent(/ESV® Bible © Crossway/)
+    expect(screen.getByRole('link', { name: 'esv.org' })).toHaveAttribute('href', 'https://www.esv.org')
     expect(screen.getByText('ESV', { exact: false, selector: '.session-count' })).toBeInTheDocument()
   })
 

@@ -1010,3 +1010,67 @@ a:focus-visible {
 }
 
 .bui-key__save:hover { border-color: var(--accent-text); }
+
+/* ─── ESV credit line and credits dialog (appendEsvCredit, openEsvCredits) ─── */
+/* Crossway wants a link to www.esv.org beside the text, not a loud one: it reads as the line it sits in. */
+.bui-esv-credit { color: var(--text-muted); }
+
+.bui-esv-credit a,
+.bui-esv-credit button {
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.bui-esv-credit a:hover,
+.bui-esv-credit button:hover {
+  color: var(--text-dim);
+  text-decoration-color: currentColor;
+}
+
+.bui-credits {
+  margin: auto;
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: 28px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-size: 16px;
+  font-weight: 450;
+  line-height: 1.5;
+}
+
+.bui-credits::backdrop { background: var(--bg-scrim); }
+
+.bui-credits h2 {
+  margin: 0 0 12px;
+  padding-right: 24px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 400;
+}
+
+.bui-credits a { color: var(--accent-text); }
+
+.bui-credits__close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.bui-credits__close:hover { color: var(--text-bright); }

@@ -69,6 +69,24 @@ describe('PageView', () => {
     expect(leaf()).not.toHaveClass('leaf-waiting')
   })
 
+  it('holds the page with a skeleton while another book loads, then lets its words rise in', async () => {
+    const { rerender } = render(page('BSB'))
+    await screen.findByText(/BSB words of 1:1/)
+
+    const next = held()
+    fetchChapter.mockReturnValueOnce(next.promise)
+    rerender(page('BSB', 'PHP'))
+
+    expect(screen.queryByText(/BSB words of 1:1/)).not.toBeInTheDocument()
+    expect(leaf()).toHaveClass('leaf-skeleton')
+    expect(leaf()).toHaveAttribute('aria-busy', 'true')
+    expect(screen.getByRole('button', { name: 'Opening the book…' })).toBeDisabled()
+
+    await act(async () => next.finish(chapterIn('BSB')))
+    expect(leaf()).not.toHaveClass('leaf-skeleton')
+    expect(leaf()).toHaveClass('leaf-arrive')
+  })
+
   it('does not start a session from a page that is still giving way', async () => {
     const { rerender } = render(page('BSB'))
     await screen.findByText(/BSB words of 1:1/)
@@ -157,15 +175,35 @@ describe('PageView in the ESV', () => {
     expect(screen.queryByRole('navigation', { name: /Parts of/ })).not.toBeInTheDocument()
   })
 
-  it('marks the text as the ESV and carries Crossway’s notice and a link to www.esv.org', async () => {
+  it('marks the text as the ESV, links www.esv.org and keeps Crossway’s full notice behind Credits', async () => {
     render(page('ESV', 'JUD'))
     await screen.findByText(/Jude words 1\./)
     const mark = document.querySelector('.leaf .esv-mark')!
     expect(mark).toHaveTextContent('(ESV)')
     expect(mark.previousElementSibling).toHaveTextContent('Jude words 9.')
     const colophon = document.querySelector('.colophon') as HTMLElement
-    expect(colophon).toHaveTextContent(/Scripture quotations are from the ESV® Bible/)
-    expect(colophon).toHaveTextContent(/more than one half of any book of the ESV Bible/)
-    expect(within(colophon).getByRole('link', { name: 'www.esv.org' })).toHaveAttribute('href', 'https://www.esv.org')
+    expect(colophon).toHaveTextContent(/ESV® Bible © Crossway/)
+    expect(colophon).not.toHaveTextContent(/Scripture quotations/)
+    expect(within(colophon).getByRole('link', { name: 'esv.org' })).toHaveAttribute('href', 'https://www.esv.org')
+    expect(within(colophon).getByRole('button', { name: 'Credits' })).toBeInTheDocument()
+    // The full notice waits in the Credits dialog, the app's copyright page.
+    const credits = document.querySelector('dialog.credits') as HTMLElement
+    expect(credits).toHaveTextContent(/Scripture quotations are from the ESV® Bible/)
+    expect(credits).toHaveTextContent(/more than one half of any book of the ESV Bible/)
+  })
+})
+
+describe('copying from the verse slip', () => {
+  // userEvent stands in its own clipboard, which this reads back.
+  it('copies the words of the chosen verses with their reference', async () => {
+    const user = userEvent.setup()
+    render(page('BSB'))
+    await screen.findByText(/BSB words of 1:1/)
+    await user.click(screen.getByText(/BSB words of 1:1/))
+    await user.click(screen.getByText(/BSB words of 1:2/))
+    await user.click(screen.getByRole('button', { name: 'Copy Ephesians 1:1–2' }))
+
+    expect(await navigator.clipboard.readText()).toBe('BSB words of 1:1. BSB words of 1:2.\n— Ephesians 1:1–2 (BSB)')
+    expect(await screen.findByRole('status')).toHaveTextContent('Copied Ephesians 1:1–2')
   })
 })
