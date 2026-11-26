@@ -36,7 +36,7 @@ The ESV needs a free key from [api.esv.org](https://api.esv.org/account/create-a
 
 NIV, NKJV and NLT come through [API.Bible](https://api.bible), which needs a free key and allows only non-commercial use on its free plan. Like the ESV, this text stays in memory, two chapters at most, and each view is reported through API.Bible's FUMS tracker. Their footnotes appear under the text.
 
-In development, put keys in `.env.local` as `VITE_ESV_KEY` and `VITE_API_BIBLE_KEY` so they apply on every port. They are never included in a production build.
+In development, put keys in `.env.local` at the repo root as `VITE_ESV_KEY` and `VITE_API_BIBLE_KEY` so they apply on every port and in every app. They are never included in a production build.
 
 Progress is stored per translation in `localStorage`. Browsers can clear it, Safari after a week away unless the app is on the home screen, so the page's colophon saves and restores a JSON backup of progress, structure recall, place and theme. Keys and Bible text are never included. Once there is progress, the app also asks the browser to keep its storage.
 

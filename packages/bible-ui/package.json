@@ -17,9 +17,17 @@
     "./tokens": "./src/tokens.ts",
     "./theme": "./src/theme.ts",
     "./translations": "./src/translations.ts",
+    "./esv": "./src/esv.ts",
     "./translation-picker": "./src/translationPicker.ts",
     "./share": "./src/share.ts",
     "./select-menu": "./src/selectMenu.ts",
     "./tooltip": "./src/tooltip.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^5.0.5",
+    "jsdom": "^30.1.3"
   }
 }

@@ -425,6 +425,23 @@ body {
   color: var(--text-dim);
 }
 
+.epigraph__esv {
+  color: inherit;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+
+.results__notice a { color: var(--accent-text); }
+
+.results__notice {
+  max-width: 34rem;
+  margin: 18px auto 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+}
+
 .cards {
   list-style: none;
   display: flex;

@@ -19,6 +19,8 @@ export default defineConfig({
   plugins: [react(), renderBlockingEntry()],
   // Pinned beside Atlas (5173) and Lineage (5174).
   server: { port: 5175, strictPort: true },
+  // Keys live in one .env.local at the repo root, shared by every app.
+  envDir: '../..',
   test: {
     environment: 'jsdom',
     setupFiles: './src/test-setup.ts',

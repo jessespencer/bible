@@ -4,6 +4,7 @@ import { APPS, appHref, createHeader, loadFonts } from "@jessespencer/bible-ui";
 import { shareView } from "@jessespencer/bible-ui/share";
 import { initTooltips } from "@jessespencer/bible-ui/tooltip";
 import { createTranslationPicker } from "@jessespencer/bible-ui/translation-picker";
+import { appendEsvCredit, createEsvKeyForm, EsvKeyError, heldEsv, loadEsv } from "@jessespencer/bible-ui/esv";
 import {
   DEFAULT_TRANSLATION,
   saveTranslation,
@@ -14,13 +15,13 @@ import {
 import { parseNeedProfile } from "./search/needProfile.ts";
 import { createVerseSearch, type VerseSearch } from "./search/search.ts";
 import { topics } from "./search/topics.ts";
-import { indexToParam } from "./search/verses.ts";
-import { showCards, skeletonCards } from "./ui/cards.ts";
+import { around, indexToParam } from "./search/verses.ts";
+import { CONTEXT, showCards, skeletonCards } from "./ui/cards.ts";
 import { createComposer, topicName } from "./ui/composer.ts";
 import { el, icon, iconButton, prefersStillness, toast } from "./ui/dom.ts";
 
 // The topics and their phrases were tuned on the World English Bible, so search always reads it.
-const SEARCH_FILE = translationById("web")!.file;
+const SEARCH_FILE = translationById("web")!.file!;
 
 // ─── Data: Atlas's files, one string per verse ───────────────────
 
@@ -75,7 +76,14 @@ const hero = el("section", "hero", main);
 const epigraph = el("figure", "epigraph", hero);
 el("blockquote", "epigraph__text", epigraph).textContent =
   "Man shall not live by bread alone, but by every word that comes from the mouth of God.";
-el("figcaption", "epigraph__ref", epigraph).textContent = "Matthew 4:4 · ESV";
+// Crossway asks that a page quoting the ESV link to www.esv.org.
+const epigraphRef = el("figcaption", "epigraph__ref", epigraph);
+epigraphRef.append("Matthew 4:4 · ");
+const esvLink = el("a", "epigraph__esv", epigraphRef);
+esvLink.href = "https://www.esv.org/";
+esvLink.target = "_blank";
+esvLink.rel = "noopener";
+esvLink.textContent = "ESV";
 
 const composer = createComposer(
   (text, steer) => {
@@ -221,10 +229,41 @@ const renderHead = () => {
   showNeed(need.primaryTopic);
 };
 
+/**
+ * The cards' verses and the ones around them; the ESV loads only those, live from Crossway.
+ * The found verses go first, so where Crossway's half-a-book limit bites, context gives way.
+ */
+const cardText = async (): Promise<string[]> => {
+  if (!translation.remote) return loadBible(translation.file!);
+  const verses = [...shown, ...shown.flatMap((verse) => around(verse, CONTEXT))];
+  await loadEsv(verses);
+  const text: string[] = [];
+  for (const verse of verses) {
+    const held = heldEsv(verse);
+    if (held !== undefined) text[verse] = held;
+  }
+  return text;
+};
+
+// Crossway asks for its full notice and a link to www.esv.org wherever ESV text is shown.
+const notice = el("p", "results__notice");
+appendEsvCredit(notice, true);
+
 const render = async () => {
-  const text = await loadBible(translation.file);
+  let text: string[];
+  try {
+    text = await cardText();
+  } catch (error) {
+    if (!(error instanceof EsvKeyError)) throw error;
+    renderHead();
+    list.replaceChildren();
+    resultsHeading.append(createEsvKeyForm(error.message, () => void render()));
+    return;
+  }
   renderHead();
   await showCards(list, { verses: shown, text, translation, atlasHref });
+  if (translation.remote) resultsFoot.after(notice);
+  else notice.remove();
 };
 
 const run = async ({ again = false, fromHistory = false } = {}) => {

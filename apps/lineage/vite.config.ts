@@ -15,6 +15,8 @@ export default defineConfig(({ command }) => ({
   plugins: [renderBlockingEntry()],
   // Pinned so the bible-ui app switcher can link across dev servers.
   server: { port: 5174, strictPort: true },
+  // Keys live in one .env.local at the repo root, shared by every app.
+  envDir: "../..",
   // In production Atlas's data sits beside us in ../atlas/, and this folder holds only Lineage's own offline files.
   // Dev serves Atlas's public folder here instead.
   publicDir: command === "serve" ? "../atlas/public" : "public",

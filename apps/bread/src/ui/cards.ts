@@ -9,7 +9,8 @@ import { el, icon, iconButton, prefersStillness, toast } from "./dom.ts";
 import { shareVerseImage } from "./shareImage.ts";
 
 const NUMERALS = ["I", "II", "III", "IV", "V"];
-const CONTEXT = 3;
+/** How many verses either side "Read around it" shows. */
+export const CONTEXT = 3;
 
 export interface CardsConfig {
   verses: number[];
@@ -48,6 +49,8 @@ const card = ({ text, translation, atlasHref }: CardsConfig, verse: number, posi
   const fillPassage = () => {
     if (passage.childElementCount) return;
     for (const index of around(verse, CONTEXT)) {
+      // Missing only where a licence limits how much may be shown at once.
+      if (text[index] === undefined) continue;
       const span = el("span", index === verse ? "card__line card__line--found" : "card__line", passage);
       el("sup", "", span).textContent = String(verseNumber(index));
       span.append(`${text[index] ?? ""} `);
