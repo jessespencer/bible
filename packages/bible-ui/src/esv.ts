@@ -135,14 +135,30 @@ const indexOf = (book: number, chapter: number, verse: number): number => {
   return index + verse - 1;
 };
 
-/** Sorted verses as runs inside one chapter each, like "John 3:16-18". */
+/**
+ * Verses the ESV numbers past the KJV's end of a chapter, as [book index, chapter, verse]; the KJV
+ * holds the same words in the verse before, so each is folded into it, as the bundled BSB folds
+ * 3 John 15. Checked against the API for every chapter: 3 John 15 is the only one.
+ */
+const EXTRA_VERSES: [book: number, chapter: number, verse: number][] = [
+  [63, 1, 15], // 3 John 15: "Peace be to you. The friends greet you…"
+];
+
+const hasExtraAfter = ({ book, chapter, verse }: Place): boolean =>
+  EXTRA_VERSES.some(([b, c, v]) => b === book && c === chapter && v === verse + 1);
+
+/**
+ * Sorted verses as runs inside one chapter each, like "John 3:16-18". A run that ends where the
+ * ESV has an extra verse asks for it too.
+ */
 export const esvQuery = (verses: number[]): string =>
   runs([...verses].sort((a, b) => a - b))
     .map(([first, last]) => {
       const a = placeOf(first);
       const b = placeOf(last);
       const name = books[a.book]!.name;
-      const span = a.verse === b.verse ? `${a.verse}` : `${a.verse}-${b.verse}`;
+      const end = hasExtraAfter(b) ? b.verse + 1 : b.verse;
+      const span = a.verse === end ? `${a.verse}` : `${a.verse}-${end}`;
       // A chapter number on a one-chapter book would read as a verse.
       return books[a.book]!.chapters === 1 ? `${name} ${span}` : `${name} ${a.chapter}:${span}`;
     })
@@ -161,7 +177,8 @@ const runs = (verses: number[]): [number, number][] => {
 
 /**
  * One passage from the API as verses. `start` is its first verse ID from `parsed`, as BBCCCVVV.
- * Markers are `[16]`, or `[4:1]` where a passage runs into the next chapter.
+ * Markers are `[16]`, or `[4:1]` where a passage runs into the next chapter. An extra ESV verse
+ * joins the end of the verse before it.
  */
 export const parseEsvPassage = (passage: string, start: number): Map<number, string> => {
   const book = Math.floor(start / 1_000_000) - 1;
@@ -170,8 +187,12 @@ export const parseEsvPassage = (passage: string, start: number): Map<number, str
   const parts = passage.split(/\[(?:(\d+):)?(\d+)\]/);
   for (let i = 1; i < parts.length; i += 3) {
     if (parts[i]) chapter = Number(parts[i]);
+    const verse = Number(parts[i + 1]);
     const text = (parts[i + 2] ?? "").replace(/\(ESV\)\s*$/, "").replace(/\s+/g, " ").trim();
-    verses.set(indexOf(book, chapter, Number(parts[i + 1])), text);
+    if (hasExtraAfter({ book, chapter, verse: verse - 1 })) {
+      const host = indexOf(book, chapter, verse - 1);
+      verses.set(host, [verses.get(host), text].filter(Boolean).join(" "));
+    } else verses.set(indexOf(book, chapter, verse), text);
   }
   return verses;
 };

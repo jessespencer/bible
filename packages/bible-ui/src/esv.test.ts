@@ -14,6 +14,11 @@ describe("esvQuery", () => {
     expect(esvQuery([at("John.3.36"), at("John.4.1")])).toBe("John 3:36;John 4:1");
   });
 
+  it("asks for the ESV's extra verse where a run ends just before it", () => {
+    expect(esvQuery([at("3John.1.13"), at("3John.1.14")])).toBe("3 John 13-15");
+    expect(esvQuery([at("3John.1.12")])).toBe("3 John 12");
+  });
+
   it("leaves the chapter out of one-chapter books, where it would read as a verse", () => {
     expect(esvQuery([at("Jude.1.3"), at("Jude.1.4")])).toBe("Jude 3-4");
   });
@@ -24,6 +29,12 @@ describe("parseEsvPassage", () => {
     const verses = parseEsvPassage("[16] “For God so loved the world,\n  [17] For God did not send (ESV)", 43003016);
     expect(verses.get(at("John.3.16"))).toBe("“For God so loved the world,");
     expect(verses.get(at("John.3.17"))).toBe("For God did not send");
+  });
+
+  it("folds the ESV's extra verse into the verse before, so no words go missing", () => {
+    const john = parseEsvPassage("[14] I hope to see you soon, and we will talk face to face. [15] Peace be to you.", 64001014);
+    expect(john.get(at("3John.1.14"))).toBe("I hope to see you soon, and we will talk face to face. Peace be to you.");
+    expect(john.has(at("Jude.1.1"))).toBe(false);
   });
 
   it("follows a passage into the next chapter", () => {
