@@ -13,6 +13,12 @@ export const STAGE_HINTS: Record<Stage, string> = {
   thread: 'Now tie it to the verse before. The seams are what slip.',
 }
 
+// Where the hint speaks of first letters, typing whole words needs its own.
+export const WORD_HINTS: Partial<Record<Stage, string>> = {
+  trace: 'Read it aloud, typing every word.',
+  shapes: 'Only the shape of the words remains. Type each one.',
+}
+
 export interface VerseRecord {
   stage: number
   box: number

@@ -1,27 +1,44 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { prefersStillness } from '../lib/motion'
+import { alignSpeech, judgeWord, scoreSpeech } from '../lib/score'
+import type { Typing } from '../lib/settings'
 import { cleanWord, shuffled, vanishOrder, type Token } from '../lib/text'
+import { VoiceMeter } from './VoiceMeter'
 import { PassageText, type Reveal, type WordState } from './PassageText'
+
+export interface TypedProgress {
+  reached: number
+  helped: Set<number>
+  typos: Set<number>
+}
 
 interface TypedStageProps {
   tokens: Token[]
   lines: Token[][]
   reveal: Reveal
   targets: number[]
+  typing: Typing
   verseNumbers?: number[]
-  onDone: (helped: Set<number>) => void
+  onDone: (helped: Set<number>, typos: Set<number>) => void
+  onProgress?: (progress: TypedProgress) => void
   onSpeak?: () => void
+  onTyping?: (typing: Typing) => void
 }
 
-// One engine for every typing stage. They differ only in what is left on the page.
-export const TypedStage = ({ tokens, lines, reveal, targets, verseNumbers, onDone, onSpeak }: TypedStageProps) => {
+// One engine for every typing stage. They differ only in what is left on the page, and in
+// whether you type each word whole or only its first letter.
+export const TypedStage = (props: TypedStageProps) => {
+  const { tokens, lines, reveal, targets, typing, verseNumbers, onDone, onProgress, onSpeak, onTyping } = props
   const [position, setPosition] = useState(0)
   const [helped, setHelped] = useState<Set<number>>(new Set())
+  const [typos, setTypos] = useState<Set<number>>(new Set())
+  const [draft, setDraft] = useState('')
   const [wrong, setWrong] = useState<{ id: number; nonce: number }>()
   const input = useRef<HTMLInputElement>(null)
-  const live = useRef({ position: 0, misses: 0, helped: new Set<number>() })
+  const live = useRef({ position: 0, misses: 0, helped: new Set<number>(), typos: new Set<number>() })
   const longPassage = tokens.length > 70
   const targetSet = useMemo(() => new Set(targets), [targets])
+  const words = typing === 'words'
 
   useEffect(() => {
     input.current?.focus({ preventScroll: true })
@@ -45,27 +62,64 @@ export const TypedStage = ({ tokens, lines, reveal, targets, verseNumbers, onDon
     state.position += 1
     state.misses = 0
     setPosition(state.position)
-    if (state.position === targets.length) onDone(state.helped)
+    setDraft('')
+    onProgress?.({ reached: state.position, helped: state.helped, typos: state.typos })
+    if (state.position === targets.length) onDone(state.helped, state.typos)
+  }
+
+  const miss = () => {
+    const state = live.current
+    const id = targets[state.position]
+    state.misses += 1
+    setDraft('')
+    if (state.misses >= 2) return step(true)
+    setWrong({ id, nonce: Date.now() })
   }
 
   const press = (char: string) => {
     const typed = cleanWord(char)
     const state = live.current
     if (!typed || state.position >= targets.length) return
+    if (typed === tokens[targets[state.position]].initial) return step(false)
+    miss()
+  }
+
+  const submit = (text: string) => {
+    const state = live.current
+    if (!cleanWord(text) || state.position >= targets.length) return
     const id = targets[state.position]
-    if (typed === tokens[id].initial) return step(false)
-    state.misses += 1
-    if (state.misses >= 2) return step(true)
-    setWrong({ id, nonce: Date.now() })
+    const verdict = judgeWord(tokens[id].word, text)
+    if (verdict === 'wrong') return miss()
+    if (verdict === 'typo') {
+      state.typos.add(id)
+      setTypos(new Set(state.typos))
+    }
+    step(false)
+  }
+
+  // Each word is checked when you finish it with a space. Moving on as soon as it matched
+  // would take "in" out of "into" and spill the rest into the next word, so only the
+  // passage's last word, with nothing after it, is taken the moment it is spelled right.
+  const typeWords = (value: string) => {
+    const parts = value.split(/\s+/)
+    const rest = parts.pop() ?? ''
+    parts.forEach(submit)
+    const state = live.current
+    const last = state.position === targets.length - 1
+    if (last && judgeWord(tokens[targets[state.position]].word, rest) === 'right') return step(false)
+    setDraft(rest)
   }
 
   const stateOf = (token: Token): WordState => {
     if (!targetSet.has(token.id)) return 'plain'
     if (helped.has(token.id)) return 'helped'
+    if (typos.has(token.id)) return 'typo'
     const at = targets[position]
     if (token.id === at) return 'current'
     return token.id < (at ?? Infinity) ? 'done' : 'todo'
   }
+
+  const at = targets[position]
 
   return (
     <div className="typed" onClick={() => input.current?.focus()}>
@@ -75,22 +129,26 @@ export const TypedStage = ({ tokens, lines, reveal, targets, verseNumbers, onDon
         stateOf={stateOf}
         wrong={wrong}
         verseNumbers={verseNumbers}
+        draft={words && at !== undefined ? { id: at, text: draft } : undefined}
       />
       <input
         ref={input}
         className="typed-input"
-        aria-label="Type the first letter of each word"
+        aria-label={words ? 'Type each word' : 'Type the first letter of each word'}
         autoCapitalize="none"
         autoComplete="off"
         autoCorrect="off"
         spellCheck={false}
         enterKeyHint="next"
-        value=""
-        onChange={(e) => [...e.target.value].forEach(press)}
+        value={words ? draft : ''}
+        onChange={(e) => (words ? typeWords(e.target.value) : [...e.target.value].forEach(press))}
         onKeyDown={(e) => {
           if (e.key === 'Tab') {
             e.preventDefault()
             step(true)
+          } else if (e.key === 'Enter' && words) {
+            e.preventDefault()
+            submit(draft)
           }
         }}
       />
@@ -98,6 +156,19 @@ export const TypedStage = ({ tokens, lines, reveal, targets, verseNumbers, onDon
         <button type="button" className="quiet" onClick={() => step(true)}>
           Peek <kbd>Tab</kbd>
         </button>
+        {onTyping && (
+          <button
+            type="button"
+            className="quiet"
+            onClick={() => {
+              setDraft('')
+              onTyping(words ? 'initials' : 'words')
+              input.current?.focus({ preventScroll: true })
+            }}
+          >
+            {words ? 'Type first letters' : 'Type whole words'}
+          </button>
+        )}
         {onSpeak && (
           <button type="button" className="quiet" onClick={onSpeak}>
             Say it aloud instead
@@ -269,43 +340,22 @@ const recognitionClass = () => {
 
 export const canSpeak = () => !!recognitionClass()
 
-// Forgiving match: speech engines hear "unto" as "onto", so a close spelling counts.
-const sounds = (expected: string, heard: string) => {
-  if (expected === heard) return true
-  if (expected.length < 4 || heard.length < 4) return false
-  return expected.slice(0, 3) === heard.slice(0, 3)
-}
-
-export const alignSpeech = (tokens: Token[], transcript: string) => {
-  const skipped = new Set<number>()
-  let position = 0
-  for (const raw of transcript.split(/\s+/)) {
-    const heard = cleanWord(raw)
-    if (!heard) continue
-    for (let i = position; i < Math.min(position + 4, tokens.length); i++) {
-      if (sounds(cleanWord(tokens[i].word), heard)) {
-        for (let s = position; s < i; s++) skipped.add(tokens[s].id)
-        position = i + 1
-        break
-      }
-    }
-  }
-  return { position, skipped }
-}
-
 interface ReciteStageProps {
   tokens: Token[]
   lines: Token[][]
   verseNumbers?: number[]
-  onDone: (helped: Set<number>) => void
-  onCancel: () => void
+  onDone: (missed: Set<number>) => void
+  onHeard?: (transcript: string) => void
+  onCancel?: () => void
+  // When given, whatever holds the stage shows the listening state, and the stage does not.
+  onProblem?: (problem: string) => void
 }
 
-export const ReciteStage = ({ tokens, lines, verseNumbers, onDone, onCancel }: ReciteStageProps) => {
+export const ReciteStage = ({ tokens, lines, verseNumbers, onDone, onHeard, onCancel, onProblem }: ReciteStageProps) => {
   const [progress, setProgress] = useState({ position: 0, skipped: new Set<number>() })
   const [problem, setProblem] = useState('')
-  const latest = useRef({ tokens, onDone })
-  latest.current = { tokens, onDone }
+  const latest = useRef({ tokens, onDone, onHeard, onProblem })
+  latest.current = { tokens, onDone, onHeard, onProblem }
 
   useEffect(() => {
     const Recognition = recognitionClass()
@@ -319,18 +369,22 @@ export const ReciteStage = ({ tokens, lines, verseNumbers, onDone, onCancel }: R
     recognition.lang = 'en-US'
     recognition.onresult = (e) => {
       session = Array.from(e.results, (r) => r[0].transcript).join(' ')
-      const next = alignSpeech(latest.current.tokens, `${heardBefore} ${session}`)
+      const transcript = `${heardBefore} ${session}`
+      const next = alignSpeech(latest.current.tokens, transcript)
       setProgress(next)
+      latest.current.onHeard?.(transcript)
       if (next.position === latest.current.tokens.length) {
         active = false
         recognition.stop()
-        latest.current.onDone(next.skipped)
+        // The live follower only looks ahead a little; the final score lines up the whole recital.
+        latest.current.onDone(scoreSpeech(latest.current.tokens, transcript, true).missed)
       }
     }
     recognition.onerror = (e) => {
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
         active = false
         setProblem('The microphone is blocked for this page.')
+        latest.current.onProblem?.('Microphone blocked')
       }
     }
     // Browsers end recognition after a pause, so carry on from what was already heard.
@@ -357,12 +411,22 @@ export const ReciteStage = ({ tokens, lines, verseNumbers, onDone, onCancel }: R
   return (
     <div className="typed">
       <PassageText lines={lines} reveal="blank" stateOf={stateOf} verseNumbers={verseNumbers} />
-      <div className="stage-tools">
-        <span className="listening">{problem || 'Listening'}</span>
-        <button type="button" className="quiet" onClick={onCancel}>
-          Back to typing
-        </button>
-      </div>
+      {!onProblem && (
+        <div className="stage-tools">
+          {problem ? (
+            <span className="listening">{problem}</span>
+          ) : (
+            <span className="listening">
+              <VoiceMeter /> Listening
+            </span>
+          )}
+          {onCancel && (
+            <button type="button" className="quiet" onClick={onCancel}>
+              Back to typing
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }

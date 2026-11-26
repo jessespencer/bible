@@ -4,7 +4,7 @@ import { today, writeStore } from './memory'
 // it can be fetched again and some of it may not be stored at all.
 // The theme is bible-ui's, shared with Atlas and Lineage; older backups call it byheart.theme.
 const THEME = 'bui-theme'
-const KEPT = ['byheart.progress', 'byheart.structure', 'byheart.place', THEME]
+const KEPT = ['byheart.progress', 'byheart.structure', 'byheart.tests', 'byheart.settings', 'byheart.place', THEME]
 
 interface Backup {
   app: 'by-heart'
