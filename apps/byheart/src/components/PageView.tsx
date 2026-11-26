@@ -2,9 +2,12 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import {
   MissingKeyError,
   chapterName,
+  chapterParts,
+  esvLimit,
   fetchChapter,
   getKey,
   getTranslation,
+  partOf,
   setKey,
   type Book,
   type Translation,
@@ -50,8 +53,14 @@ export const PageView = (props: PageViewProps) => {
   const [greek, setGreek] = useState<GreekData>()
   const [opened, setOpened] = useState<{ id: string; tag: GreekTag; ref: string; anchor: HTMLElement }>()
   const [found, setFound] = useState<{ chapter: number; verse: number }>()
+  const [partChoice, setPartChoice] = useState<{ id: string; part: number }>()
   const printed = useRef(false)
-  const pageId = `${translation}:${book.code}:${chapter}:${keyAttempt}`
+  // An ESV chapter longer than half its book is printed in parts, one at a time.
+  const parts = chapterParts(translation, book, chapter)
+  const chapterId = `${translation}:${book.code}:${chapter}`
+  const part = partChoice?.id === chapterId ? Math.min(partChoice.part, parts.length - 1) : 0
+  const inParts = parts.length > 1
+  const pageId = `${chapterId}:${part}:${keyAttempt}`
   const selection = chosen?.id === pageId ? chosen.range : undefined
   const problem = failure?.id === pageId ? failure : undefined
   // The last page stays printed while the next one loads, so the page never collapses between them.
@@ -64,7 +73,7 @@ export const PageView = (props: PageViewProps) => {
 
   useEffect(() => {
     const live = { current: true }
-    fetchChapter(translation, book, chapter)
+    fetchChapter(translation, book, chapter, part)
       .then((v) => {
         if (!live.current) return
         // Turning from one page to the next cross-fades the text in place and eases what sits below it.
@@ -84,7 +93,7 @@ export const PageView = (props: PageViewProps) => {
     return () => {
       live.current = false
     }
-  }, [translation, book, chapter, pageId])
+  }, [translation, book, chapter, part, pageId])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setChosen(undefined)
@@ -157,6 +166,7 @@ export const PageView = (props: PageViewProps) => {
     const [target, verse] = ref.split(':').map(Number)
     setOpened(undefined)
     setFound({ chapter: target, verse })
+    setPartChoice({ id: `${translation}:${book.code}:${target}`, part: partOf(translation, book, target, verse) })
     if (target !== chapter) props.onChapter(target)
   }
 
@@ -167,7 +177,12 @@ export const PageView = (props: PageViewProps) => {
   const untagged = greekReady ? verses.filter((v) => !greekPieces(v)).length : 0
 
   const chapterCount = (n: number) => kept.filter(([key]) => parseKey(key).chapter === n).length
-  const lastVerse = verses[verses.length - 1]?.verse ?? 1
+  const lastVerse = inParts ? parts[parts.length - 1][1] : (verses[verses.length - 1]?.verse ?? 1)
+  const turnTo = (n: number) => {
+    setChosen(undefined)
+    setPartChoice({ id: chapterId, part: n })
+  }
+  const nextPart = inParts && part < parts.length - 1 ? parts[part + 1] : undefined
   const credited = getTranslation(translation)
   const titleStyle = { '--letters': Math.max(book.name.length, 8) } as CSSProperties
 
@@ -255,6 +270,23 @@ export const PageView = (props: PageViewProps) => {
         ))}
       </nav>
 
+      {inParts && (
+        <nav className="chapters parts" aria-label={`Parts of ${book.chapters === 1 ? book.name : `chapter ${chapter}`}`}>
+          {parts.map(([from, to], n) => (
+            <button
+              key={from}
+              type="button"
+              className={n === part ? 'on' : ''}
+              aria-current={n === part ? 'page' : undefined}
+              aria-label={`Verses ${from} to ${to}`}
+              onClick={() => turnTo(n)}
+            >
+              {from}–{to}
+            </button>
+          ))}
+        </nav>
+      )}
+
       {problem?.needsKey ? (
         <KeyForm translation={credited} message={problem.message} onSaved={() => setKeyAttempt(keyAttempt + 1)} />
       ) : problem ? (
@@ -269,9 +301,11 @@ export const PageView = (props: PageViewProps) => {
               {greekReady && <span> Tap a dotted word to see the Greek behind it.</span>}
             </p>
           )}
-          <span className="drop" aria-hidden="true">
-            {chapterName(book, chapter)}
-          </span>
+          {part === 0 && (
+            <span className="drop" aria-hidden="true">
+              {chapterName(book, chapter)}
+            </span>
+          )}
           {verses.map((v) => {
             const record = recordOf(v.verse)
             const chosen = selection && v.verse >= selection[0] && v.verse <= selection[1]
@@ -315,6 +349,24 @@ export const PageView = (props: PageViewProps) => {
               </span>
             )
           })}
+          {credited.id === 'ESV' && verses.length > 0 && <span className="esv-mark">(ESV)</span>}
+          {nextPart && verses.length > 0 && (
+            <p className="read-on">
+              <button
+                type="button"
+                className="quiet"
+                onClick={() => {
+                  turnTo(part + 1)
+                  // The next part begins at the top of the page, not where this one ended.
+                  document
+                    .querySelector('.parts')
+                    ?.scrollIntoView({ block: 'start', behavior: prefersStillness() ? 'auto' : 'smooth' })
+                }}
+              >
+                Read on: verses {nextPart[0]}–{nextPart[1]}
+              </button>
+            </p>
+          )}
           <Footnotes verses={verses} />
           {greekReady && note && (
             <GreekNote
@@ -331,6 +383,12 @@ export const PageView = (props: PageViewProps) => {
 
       <footer className="colophon">
         <p>Unlearned verses are printed in grey. They darken as you learn them.</p>
+        {inParts && (
+          <p>
+            Crossway lets a page show no more than half of {book.name}, {esvLimit(book)} verses, so this{' '}
+            {book.chapters === 1 ? 'book' : 'chapter'} is printed in {parts.length} parts.
+          </p>
+        )}
         {untagged > 0 && (
           <p>
             Greek is hidden for {untagged === 1 ? 'one verse' : `${untagged} verses`} here: the wording differs from the
@@ -357,7 +415,7 @@ export const PageView = (props: PageViewProps) => {
         )}
         {credited.credit ? (
           <p>
-            {credited.credit}
+            {credited.copyright ?? credited.credit}
             {credited.links?.map((link) => (
               <span key={link.url}>
                 {' '}

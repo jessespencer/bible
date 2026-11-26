@@ -121,7 +121,7 @@ describe('WhereIsIt', () => {
   it('fetches only the chapter it is asking about', async () => {
     await renderDrill()
     expect(fetchChapter).toHaveBeenCalledTimes(1)
-    expect(fetchChapter).toHaveBeenCalledWith('BSB', expect.anything(), 2)
+    expect(fetchChapter).toHaveBeenCalledWith('BSB', expect.anything(), 2, 0)
   })
 
   it('says so when the chapter cannot be reached', async () => {
@@ -134,5 +134,18 @@ describe('WhereIsIt', () => {
     const user = await renderDrill()
     await user.keyboard('{Escape}')
     expect(onExit).toHaveBeenCalledOnce()
+  })
+
+  it('loads only the part of an ESV chapter that holds the verse, but asks across the whole chapter', async () => {
+    fetchChapter.mockImplementation(async () =>
+      Array.from({ length: 8 }, (_, i) => ({ chapter: 1, verse: 10 + i, text: `Words of 1:${10 + i}.` })),
+    )
+    render(<WhereIsIt book={getBook('JUD')} translation="ESV" progress={{ 'ESV:JUD:1:12': known }} onExit={onExit} />)
+    await screen.findByRole('group')
+    expect(fetchChapter).toHaveBeenCalledWith('ESV', expect.anything(), 1, 1)
+    expect(screen.getAllByRole('button', { name: /^Verse \d+$/ })).toHaveLength(25)
+    expect(document.querySelector('.where-verse')).toHaveTextContent('Words of 1:12. (ESV)')
+    expect(screen.getByRole('link', { name: 'www.esv.org' })).toBeInTheDocument()
+    expect(screen.getByText(/Scripture quotations are from the ESV® Bible/)).toBeInTheDocument()
   })
 })

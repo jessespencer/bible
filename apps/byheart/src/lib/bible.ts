@@ -1,3 +1,5 @@
+import { books as canon } from '@jessespencer/bible-ui/bible'
+
 export interface Verse {
   chapter: number
   verse: number
@@ -21,8 +23,13 @@ export interface Translation {
   creditOnRecitals?: boolean
   // What the rights holder asks to be shown with the text. Public domain needs neither.
   credit?: string
+  // The longer notice for the page's colophon, which stands as the app's copyright page.
+  copyright?: string
   links?: { label: string; url: string }[]
 }
+
+const ESV_NOTICE =
+  'Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved.'
 
 const API_BIBLE = { lender: 'API.Bible', site: 'api.bible', url: 'https://api.bible/sign-up' }
 
@@ -31,9 +38,11 @@ export const TRANSLATIONS: Translation[] = [
     id: 'ESV',
     name: 'English Standard Version',
     keySource: { lender: 'Crossway', site: 'api.esv.org', url: 'https://api.esv.org/account/create-application/' },
-    credit:
-      'Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved.',
-    links: [{ label: 'ESV.org', url: 'https://www.esv.org' }],
+    credit: ESV_NOTICE,
+    copyright: `${ESV_NOTICE} The ESV text may not be quoted in any publication made available to the public by a Creative Commons license. The ESV may not be translated into any other language. Users may not copy or download more than 500 verses of the ESV Bible or more than one half of any book of the ESV Bible.`,
+    // Crossway asks for its notice and a link to www.esv.org on every page that uses the text.
+    creditOnRecitals: true,
+    links: [{ label: 'www.esv.org', url: 'https://www.esv.org' }],
   },
   {
     id: 'NIV',
@@ -109,6 +118,51 @@ export const getTranslation = (id: string) =>
 
 export const getBook = (code: string) => BOOKS.find((b) => b.code === code) ?? BOOKS[48]
 
+// Verses per chapter in the ESV, which numbers as the KJV does except that 3 John runs to 15.
+const esvVerses = (book: Book, chapter: number) =>
+  book.code === '3JN' ? 15 : canon[BOOKS.findIndex((b) => b.code === book.code)].verseCounts[chapter - 1]
+
+const OPEN_END = 999
+
+/**
+ * The most ESV verses of a book that may be shown on one page or held at once. Crossway's
+ * conditions allow 500 verses or half the book, whichever is less, and the exemption for
+ * one- and two-chapter books covers only a single request, not what is shown or kept.
+ */
+export const esvLimit = (book: Book) => {
+  const total = Array.from({ length: book.chapters }, (_, i) => esvVerses(book, i + 1)).reduce((a, b) => a + b, 0)
+  return Math.min(500, Math.floor(total / 2))
+}
+
+/**
+ * The verse ranges a chapter is printed in. Only an ESV chapter longer than its book's limit
+ * (Obadiah, Haggai 2, Philemon, 2 and 3 John, Jude) comes in more than one, of even length.
+ */
+export const chapterParts = (translationId: string, book: Book, chapter: number): [number, number][] => {
+  if (!isEsv(getTranslation(translationId))) return [[1, OPEN_END]]
+  const count = esvVerses(book, chapter)
+  const limit = esvLimit(book)
+  if (count <= limit) return [[1, OPEN_END]]
+  const n = Math.ceil(count / limit)
+  const end = (i: number) => Math.ceil((i * count) / n)
+  return Array.from({ length: n }, (_, i) => [end(i) + 1, end(i + 1)])
+}
+
+export const partOf = (translationId: string, book: Book, chapter: number, verse: number) =>
+  Math.max(0, chapterParts(translationId, book, chapter).findIndex(([, to]) => verse <= to))
+
+/** Cuts runs at the chapter's part breaks, so no screen carries more of the book than a page may. */
+export const splitAtParts = <T extends { chapter: number; from: number; to: number }>(
+  translationId: string,
+  book: Book,
+  items: T[],
+): T[] =>
+  items.flatMap((item) =>
+    chapterParts(translationId, book, item.chapter)
+      .filter(([from, to]) => from <= item.to && to >= item.from)
+      .map(([from, to]) => ({ ...item, from: Math.max(from, item.from), to: Math.min(to, item.to) })),
+  )
+
 const squash = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, '')
 
 const isScatteredIn = (letters: string, word: string) => {
@@ -144,6 +198,8 @@ export const findBooks = (query: string) => {
 
 export class MissingKeyError extends Error {}
 
+const isEsv = (t: Translation) => !t.apiId && !t.apiBibleId
+
 const keyStore = (t: Translation) => (t.apiBibleId ? 'byheart.apiBibleKey' : 'byheart.esvKey')
 
 // A key in .env.local saves pasting it on each dev port. These only exist in development,
@@ -157,14 +213,34 @@ export const getKey = (t: Translation) => localStorage.getItem(keyStore(t)) || e
 export const setKey = (t: Translation, key: string) => localStorage.setItem(keyStore(t), key.trim())
 
 // Licensed text stays in memory, never on disk, and only the two most recent chapters
-// are kept. Crossway caps storage at half a book, and API.Bible and Biblica set their own
-// limits, so every licensed translation shares this one small shelf.
-const heldChapters = new Map<string, { verses: Verse[]; fumsToken?: string }>()
+// are kept. API.Bible and Biblica set their own limits, so every licensed translation shares
+// this one small shelf. The ESV is held more tightly still: no more than 500 verses, or half
+// of any one book, whichever is less, letting go of the oldest first.
+interface Held {
+  book?: Book
+  verses: Verse[]
+  fumsToken?: string
+}
+const heldChapters = new Map<string, Held>()
 
-const hold = (key: string, verses: Verse[], fumsToken?: string) => {
-  heldChapters.set(key, { verses, fumsToken })
+const versesHeld = (book?: Book) =>
+  [...heldChapters.values()]
+    .filter((held) => held.book && (!book || held.book.code === book.code))
+    .reduce((sum, held) => sum + held.verses.length, 0)
+
+const hold = (key: string, held: Held) => {
+  heldChapters.delete(key)
+  heldChapters.set(key, held)
+  const over = () => held.book && (versesHeld(held.book) > esvLimit(held.book) || versesHeld() > 500)
+  for (const [oldKey, old] of heldChapters) {
+    if (!over() || oldKey === key) break
+    if (old.book) heldChapters.delete(oldKey)
+  }
   if (heldChapters.size > 2) heldChapters.delete(heldChapters.keys().next().value!)
 }
+
+/** How many ESV verses are held in memory, of one book or of all. For tests. */
+export const esvVersesHeld = versesHeld
 
 interface ApiNode {
   name?: string
@@ -253,10 +329,10 @@ const fetchPublicDomain = async (t: Translation, book: Book, chapter: number): P
   return verses
 }
 
-export const parseVerses = (passage: string, chapter: number): Verse[] => {
+export const parseVerses = (passage: string, chapter: number, first = 1): Verse[] => {
   const parts = passage.split(/\[(?:\d+:)?(\d+)\]/)
   const verses: Verse[] = []
-  if (parts[0].trim()) verses.push({ chapter, verse: 1, text: parts[0] })
+  if (parts[0].trim()) verses.push({ chapter, verse: first, text: parts[0] })
   for (let i = 1; i < parts.length; i += 2) {
     verses.push({ chapter, verse: Number(parts[i]), text: parts[i + 1] })
   }
@@ -293,21 +369,31 @@ const fetchApiBible = async (t: Translation, book: Book, chapter: number): Promi
   if (!res.ok) throw new Error(`Could not load ${book.name} ${chapter}`)
   const data = (await res.json()) as { data: { content: ApiNode[] }; meta: { fumsToken: string } }
   const verses = parseApiBible(data.data.content, chapter)
-  hold(heldKey, verses, data.meta.fumsToken)
+  hold(heldKey, { verses, fumsToken: data.meta.fumsToken })
   reportView(data.meta.fumsToken)
   return verses
 }
 
-const fetchEsv = async (t: Translation, book: Book, chapter: number): Promise<Verse[]> => {
-  const heldKey = `${t.id}.${book.code}.${chapter}`
+const fetchEsv = async (t: Translation, book: Book, chapter: number, part: number): Promise<Verse[]> => {
+  const heldKey = `${t.id}.${book.code}.${chapter}.${part}`
   const held = heldChapters.get(heldKey)
-  if (held) return held.verses
+  if (held) {
+    hold(heldKey, held)
+    return held.verses
+  }
 
   const key = getKey(t)
   if (!key) throw new MissingKeyError()
+  const parts = chapterParts(t.id, book, chapter)
+  const [from, to] = parts[Math.min(part, parts.length - 1)]
   const params = new URLSearchParams({
     // A chapter number on a one-chapter book would read as a verse.
-    q: book.chapters === 1 ? book.name : `${book.name} ${chapter}`,
+    q:
+      parts.length > 1
+        ? `${book.name} ${chapter}:${from}-${to}`
+        : book.chapters === 1
+          ? book.name
+          : `${book.name} ${chapter}`,
     'include-passage-references': 'false',
     'include-first-verse-numbers': 'true',
     'include-verse-numbers': 'true',
@@ -331,15 +417,19 @@ const fetchEsv = async (t: Translation, book: Book, chapter: number): Promise<Ve
   if (res.status === 401 || res.status === 403) throw new MissingKeyError('That ESV key was not accepted.')
   if (!res.ok) throw new Error(`Could not load ${book.name} ${chapter}`)
   const data = (await res.json()) as { passages: string[] }
-  const verses = parseVerses(data.passages.join(' '), chapter)
-  hold(heldKey, verses)
+  // Kept to the part asked for and to the book's limit, whatever comes back.
+  const verses = parseVerses(data.passages.join(' '), chapter, from)
+    .filter((v) => v.verse >= from && v.verse <= to)
+    .slice(0, esvLimit(book))
+  hold(heldKey, { book, verses })
   return verses
 }
 
-export const fetchChapter = (translationId: string, book: Book, chapter: number): Promise<Verse[]> => {
+/** A chapter's text, or for an ESV chapter printed in parts (`chapterParts`), one part of it. */
+export const fetchChapter = (translationId: string, book: Book, chapter: number, part = 0): Promise<Verse[]> => {
   const t = getTranslation(translationId)
   if (t.apiBibleId) return fetchApiBible(t, book, chapter)
-  return t.apiId ? fetchPublicDomain(t, book, chapter) : fetchEsv(t, book, chapter)
+  return t.apiId ? fetchPublicDomain(t, book, chapter) : fetchEsv(t, book, chapter, part)
 }
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']

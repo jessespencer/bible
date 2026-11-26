@@ -631,6 +631,31 @@ kbd {
   color: var(--rubric);
 }
 
+/* The parts of an ESV chapter too long for one page sit under the chapters, as a second row. */
+.chapters.parts {
+  border-top: 0;
+  padding-top: 0.2rem;
+}
+
+.chapters.parts button {
+  font-family: var(--book);
+  font-size: 1rem;
+  font-variant-numeric: oldstyle-nums;
+}
+
+.esv-mark {
+  font-size: 0.72em;
+  letter-spacing: 0.04em;
+  color: var(--soft);
+  white-space: nowrap;
+}
+
+.read-on {
+  margin-top: 1.4rem;
+  text-align: left;
+  font-size: 1rem;
+}
+
 .leaf {
   padding-top: 2rem;
   font-size: 1.3rem;
