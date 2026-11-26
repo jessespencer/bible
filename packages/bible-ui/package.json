@@ -21,7 +21,8 @@
     "./translation-picker": "./src/translationPicker.ts",
     "./share": "./src/share.ts",
     "./select-menu": "./src/selectMenu.ts",
-    "./tooltip": "./src/tooltip.ts"
+    "./tooltip": "./src/tooltip.ts",
+    "./skeleton": "./src/skeleton.ts"
   },
   "scripts": {
     "test": "vitest run"

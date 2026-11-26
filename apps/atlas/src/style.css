@@ -794,8 +794,6 @@ html[data-theme="light"] .bui-night {
   margin-right: 2px;
 }
 
-.cp-loading { color: var(--text-muted); }
-
 .cp-more {
   color: var(--text-muted);
   font-size: 12px;

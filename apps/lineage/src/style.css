@@ -1507,10 +1507,6 @@ html[data-theme="light"] .minimap__era { background: var(--era-day); opacity: 1;
   line-height: 1.5;
 }
 
-.cp-loading {
-  color: var(--text-muted);
-}
-
 .cp-section {
   padding: 14px 0 10px;
 }

@@ -599,25 +599,11 @@ body {
   cursor: progress;
 }
 
-/* Waiting for the first answer */
-.card--skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-height: 150px;
-}
-
-.skeleton-line {
-  display: block;
-  height: 16px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, var(--fill-subtle), var(--fill-hover), var(--fill-subtle));
-  background-size: 200% 100%;
-  animation: shimmer 1.4s linear infinite;
-}
-
-@keyframes shimmer {
-  to { background-position: -200% 0; }
+/* Waiting for an answer: bible-ui's word skeleton, in the card's own type */
+.card--skeleton .card__foot {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--accent-text);
 }
 
 .results__foot {
@@ -865,8 +851,7 @@ body {
     animation-delay: 0s;
   }
 
-  .composer--busy .composer__send,
-  .skeleton-line {
+  .composer--busy .composer__send {
     animation: none;
   }
 

@@ -1074,3 +1074,42 @@ a:focus-visible {
 }
 
 .bui-credits__close:hover { color: var(--text-bright); }
+
+/* ─── Text skeleton: word-shaped bars holding a passage's place while it loads ─── */
+
+/* Waits a beat before showing, so text that comes back quickly goes straight to the page. */
+.bui-skeleton {
+  animation: bui-skeleton-in 0.4s ease 0.15s backwards;
+}
+
+.bui-skeleton__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* In the colour of the text around it, so it reads as ink in any app and either theme. */
+.bui-skeleton__word {
+  display: inline-block;
+  height: 0.5em;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.1;
+  animation: bui-skeleton-breathe 1.8s ease-in-out infinite;
+}
+
+@keyframes bui-skeleton-in {
+  from { opacity: 0; }
+}
+
+@keyframes bui-skeleton-breathe {
+  50% { opacity: 0.18; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bui-skeleton,
+  .bui-skeleton__word { animation: none; }
+}

@@ -3,6 +3,7 @@
  * becomes an image to share, or opens in Atlas with its cross-references.
  */
 
+import { createSkeleton } from "@jessespencer/bible-ui/skeleton";
 import type { Translation } from "@jessespencer/bible-ui/translations";
 import { around, indexToLabel, verseNumber } from "../search/verses.ts";
 import { el, icon, iconButton, prefersStillness, toast } from "./dom.ts";
@@ -108,13 +109,19 @@ const card = ({ text, translation, atlasHref }: CardsConfig, verse: number, posi
 };
 
 /** Placeholder cards while the search reads the Bible for the first time. */
+/** Three cards in the shape of verses, holding the place until the real ones are found and loaded. */
 export const skeletonCards = (parent: HTMLElement) => {
   const list = el("ol", "cards cards--waiting", parent);
-  list.setAttribute("aria-hidden", "true");
+  list.setAttribute("aria-label", "Finding verses");
   for (let i = 0; i < 3; i++) {
     const item = el("li", "card card--skeleton", list);
     item.style.setProperty("--i", String(i));
-    for (const width of [92, 78, 54]) el("span", "skeleton-line", item).style.width = `${width}%`;
+    const numeral = el("span", "card__numeral", item);
+    numeral.textContent = NUMERALS[i] ?? "";
+    numeral.setAttribute("aria-hidden", "true");
+    // Words in the verse's own size, so the cards don't jump when the real ones land.
+    el("div", "card__verse", item).append(createSkeleton({ words: 15 + i * 4, from: i * 17, label: "Loading a verse" }));
+    el("footer", "card__foot", item).append(createSkeleton({ words: 2, from: i * 17 + 40, label: "" }));
   }
   return list;
 };
