@@ -174,3 +174,18 @@ describe('PageView in the ESV', () => {
     expect(credits).toHaveTextContent(/more than one half of any book of the ESV Bible/)
   })
 })
+
+describe('copying from the verse slip', () => {
+  // userEvent stands in its own clipboard, which this reads back.
+  it('copies the words of the chosen verses with their reference', async () => {
+    const user = userEvent.setup()
+    render(page('BSB'))
+    await screen.findByText(/BSB words of 1:1/)
+    await user.click(screen.getByText(/BSB words of 1:1/))
+    await user.click(screen.getByText(/BSB words of 1:2/))
+    await user.click(screen.getByRole('button', { name: 'Copy Ephesians 1:1–2' }))
+
+    expect(await navigator.clipboard.readText()).toBe('BSB words of 1:1. BSB words of 1:2.\n— Ephesians 1:1–2 (BSB)')
+    expect(await screen.findByRole('status')).toHaveTextContent('Copied Ephesians 1:1–2')
+  })
+})

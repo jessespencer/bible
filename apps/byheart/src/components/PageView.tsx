@@ -1,3 +1,4 @@
+import { copyText } from "@jessespencer/bible-ui/share";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   MissingKeyError,
@@ -608,6 +609,8 @@ export const PageView = (props: PageViewProps) => {
       <VerseSlip
         book={book}
         chapter={chapter}
+        translation={translation}
+        verses={verses}
         selection={selection}
         onLearn={learnSelection}
         onRecite={([from, to]) =>
@@ -645,6 +648,8 @@ const GreekWordSpan = ({ text, open, onOpen }: GreekWordSpanProps) => (
 interface VerseSlipProps {
   book: Book;
   chapter: number;
+  translation: string;
+  verses: Verse[];
   selection?: [number, number];
   onLearn: (selection: [number, number]) => void;
   onRecite: (selection: [number, number]) => void;
@@ -654,15 +659,39 @@ interface VerseSlipProps {
 const VerseSlip = ({
   book,
   chapter,
+  translation,
+  verses,
   selection,
   onLearn,
   onRecite,
 }: VerseSlipProps) => {
   const [held, setHeld] = useState(selection);
-  if (selection && selection !== held) setHeld(selection);
+  const [copied, setCopied] = useState<"done" | "failed">();
+  if (selection && selection !== held) {
+    setHeld(selection);
+    setCopied(undefined);
+  }
   if (!selection && held && prefersStillness()) setHeld(undefined);
+
+  useEffect(() => {
+    if (!copied) return;
+    const fade = setTimeout(() => setCopied(undefined), 1600);
+    return () => clearTimeout(fade);
+  }, [copied]);
+
   if (!held) return null;
   const leaving = selection ? "" : "dock-leaving";
+  const reference = `${book.name} ${chapter}:${held[0]}${held[1] !== held[0] ? `–${held[1]}` : ""}`;
+  const passage = verses
+    .filter((v) => v.verse >= held[0] && v.verse <= held[1])
+    .map((v) => v.text.trim())
+    .join(" ");
+
+  const copy = async () => {
+    const done = await copyText(`${passage}\n— ${reference} (${translation})`);
+    setCopied(done ? "done" : "failed");
+  };
+
   return (
     <>
       <div className={`dock-veil ${leaving}`} aria-hidden="true" />
@@ -673,9 +702,20 @@ const VerseSlip = ({
         }}
       >
         <div className="dock-slip">
-          <span className="dock-ref">
-            {book.name} {chapter}:{held[0]}
-            {held[1] !== held[0] && `–${held[1]}`}
+          <span className="dock-ref">{reference}</span>
+          <button
+            type="button"
+            className={`dock-copy ${copied ? `dock-copy-${copied}` : ""}`}
+            aria-label={`Copy ${reference}`}
+            title="Copy the verse"
+            disabled={!passage}
+            onClick={copy}
+          >
+            {copied === "done" ? <CheckIcon /> : <CopyIcon />}
+          </button>
+          <span className="sr-only" role="status">
+            {copied === "done" && `Copied ${reference}`}
+            {copied === "failed" && "Couldn't reach the clipboard"}
           </span>
           <span className="dock-actions">
             <button
@@ -698,6 +738,20 @@ const VerseSlip = ({
     </>
   );
 };
+
+// Lucide "copy" and "check".
+const CopyIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
 
 interface KeyFormProps {
   translation: Translation;
