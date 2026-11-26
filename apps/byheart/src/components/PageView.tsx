@@ -610,6 +610,17 @@ export const PageView = (props: PageViewProps) => {
           </p>
         )}
         <Backup />
+        <p>
+          Made by{" "}
+          <a
+            className="quiet"
+            href="https://jessespencer.dev"
+            target="_blank"
+            rel="noopener"
+          >
+            jessespencer.dev
+          </a>
+        </p>
       </footer>
 
       <VerseSlip
