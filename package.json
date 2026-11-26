@@ -15,6 +15,7 @@
     "build:byheart": "pnpm --filter byheart build",
     "build:bread": "pnpm --filter bread build",
     "test:byheart": "pnpm --filter byheart test",
-    "test:bread": "pnpm --filter bread test"
+    "test:bread": "pnpm --filter bread test",
+    "test:bible-ui": "pnpm --filter @jessespencer/bible-ui test"
   }
 }

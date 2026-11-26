@@ -801,6 +801,17 @@ html[data-theme="light"] .bui-night {
   font-size: 12px;
 }
 
+.cp-mark {
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.cp-limit {
+  margin: 0 0 10px;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
 .cp-lead {
   font-size: 17px;
   line-height: 1.5;

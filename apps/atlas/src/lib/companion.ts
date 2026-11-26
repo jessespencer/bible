@@ -5,7 +5,8 @@ import { BOOK_GENRE, GENRES } from '../data/genres';
 import { linkFrom, linkToEnd, linkToStart, linkVotes, type LinkStore } from './links';
 import { formatRange, formatVerse, locate, VERSE_BOOK, type Passage } from './verses';
 
-export type VerseTexts = string[] | null;
+/** A verse's text: `""` where the translation omits it, `undefined` while it loads. */
+export type VerseTexts = ((verse: number) => string | undefined) | null;
 
 export interface CompanionTarget {
   heading: HTMLElement;
@@ -15,12 +16,23 @@ export interface CompanionTarget {
 const INITIAL_ROWS = 30;
 const MAX_ROW_VERSES = 12;
 const READABLE_VERSES = 180;
-// The translation being read, for its omission note and the text's language.
-let reading = { abbr: 'BSB', language: 'en' };
-
-export function setReading(abbr: string, language: string) {
-  reading = { abbr, language };
+interface Reading {
+  abbr: string;
+  language: string;
+  /** Letters a licence asks for after each quotation, like "(ESV)". */
+  mark?: string;
+  /** The most verses of a book that may be shown at once, where a licence limits it. */
+  limit?: (verse: number) => number;
 }
+
+// The translation being read, for its omission note, the text's language and its licence.
+let reading: Reading = { abbr: 'BSB', language: 'en' };
+
+export function setReading(next: Reading) {
+  reading = next;
+}
+
+const markHtml = () => (reading.mark ? ` <span class="cp-mark">${reading.mark}</span>` : '');
 const COPY_ICON = createElement(Copy).outerHTML;
 
 function escapeHtml(text: string): string {
@@ -32,26 +44,29 @@ function genreOf(verse: number) {
 }
 
 function verseText(texts: VerseTexts, verse: number): string {
-  if (!texts) return '<span class="cp-loading">Loading text…</span>';
-  if (!texts[verse]) return `<em>The ${reading.abbr} omits this verse, following the earliest manuscripts.</em>`;
-  return reading.language === 'en' ? escapeHtml(texts[verse]) : `<span lang="${reading.language}">${escapeHtml(texts[verse])}</span>`;
+  const text = texts?.(verse);
+  if (text === undefined) return '<span class="cp-loading">Loading text…</span>';
+  if (!text) return `<em>The ${reading.abbr} omits this verse, following the earliest manuscripts.</em>`;
+  return reading.language === 'en' ? escapeHtml(text) : `<span lang="${reading.language}">${escapeHtml(text)}</span>`;
 }
 
 function passageText(texts: VerseTexts, start: number, end: number): string {
-  if (start === end) return verseText(texts, start);
-  const last = Math.min(end, start + MAX_ROW_VERSES - 1);
+  if (start === end) return verseText(texts, start) + markHtml();
+  const shown = Math.min(MAX_ROW_VERSES, reading.limit?.(start) ?? Infinity);
+  const last = Math.min(end, start + shown - 1);
   let html = '';
   for (let verse = start; verse <= last; verse++) {
     html += `<sup>${locate(verse).verse}</sup>${verseText(texts, verse)} `;
   }
+  html = html.trimEnd() + markHtml();
   const more = end - last;
-  return more > 0 ? `${html}<span class="cp-more">and ${more} more verse${more === 1 ? '' : 's'}</span>` : html;
+  return more > 0 ? `${html} <span class="cp-more">and ${more} more verse${more === 1 ? '' : 's'}</span>` : html;
 }
 
 // Copyrighted translations can't be bundled, so the passage links out to them instead.
 function elsewhere(start: number, end: number): string {
   const reference = formatRange(start, end);
-  const links = LINKED_TRANSLATIONS.map(version =>
+  const links = LINKED_TRANSLATIONS.filter(version => version !== reading.abbr).map(version =>
     `<a href="${readElsewhereHref(reference, version)}" target="_blank" rel="noopener">${version}</a>`).join(' · ');
   return `<p class="cp-elsewhere">Also in ${links}</p>`;
 }
@@ -215,12 +230,16 @@ export function renderLinkView(
 }
 
 function chapterVerses(texts: VerseTexts, passage: Passage, highlight: number | null): string {
+  const limit = reading.limit?.(passage.start) ?? Infinity;
+  if (passage.end - passage.start + 1 > limit) {
+    return `<p class="cp-limit">The ${reading.abbr}'s publisher allows ${limit} verses of ${BOOKS[VERSE_BOOK[passage.start]].name} on screen at once, half the book. Pick a shorter passage to read it here.</p>`;
+  }
   let html = '';
   for (let verse = passage.start; verse <= passage.end; verse++) {
     const marked = verse === highlight ? ' cp-marked' : '';
     html += `<span class="cp-line${marked}"><button class="cp-number" data-range="${verse}-${verse}">${locate(verse).verse}</button>${verseText(texts, verse)}</span> `;
   }
-  return `<p class="cp-text cp-reading">${html}</p>`;
+  return `<p class="cp-text cp-reading">${html.trimEnd()}${markHtml()}</p>`;
 }
 
 export function renderPassageView(

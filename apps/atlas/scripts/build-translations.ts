@@ -75,7 +75,7 @@ async function main() {
   for (const translation of TRANSLATIONS) {
     if (!translation.source) continue;
     const text = await download(translation.id, translation.source);
-    writeFileSync(join(OUT_DIR, translation.file), JSON.stringify(parse(translation.id, text)));
+    writeFileSync(join(OUT_DIR, translation.file!), JSON.stringify(parse(translation.id, text)));
   }
 }
 

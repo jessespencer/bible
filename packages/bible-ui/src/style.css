@@ -954,3 +954,59 @@ a:focus-visible {
     transition: opacity 120ms;
   }
 }
+
+/* ─── ESV key form ───────────────────────────────────────── */
+.bui-key {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-surface);
+  font-family: var(--font-ui);
+}
+
+.bui-key__intro {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.bui-key__intro a { color: var(--accent-text); }
+
+.bui-key__row {
+  display: flex;
+  gap: 8px;
+}
+
+.bui-key__input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+}
+
+.bui-key__input:focus-visible {
+  outline: 2px solid var(--accent-border);
+  outline-offset: 1px;
+}
+
+.bui-key__save {
+  padding: 8px 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  background: var(--accent-fill);
+  color: var(--accent-bright);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.bui-key__save:hover { border-color: var(--accent-text); }

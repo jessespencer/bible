@@ -1,7 +1,8 @@
 /**
  * The Bibles the apps can read from. Each one is mapped to KJV verse numbering at build time
  * (apps/atlas/scripts/build-translations.ts) and served as `data/<file>`, one string per verse.
- * Every one here is public domain or openly licensed; copyrighted ones are only ever linked to.
+ * Every bundled one is public domain or openly licensed. The ESV is the exception: it has no
+ * file and is read live from Crossway with the reader's own key (see esv.ts).
  */
 
 export interface Translation {
@@ -12,7 +13,10 @@ export interface Translation {
   language: string;
   /** The language's own name for itself. */
   languageName: string;
-  file: string;
+  /** The bundled text; absent for a translation read live, which has `remote` instead. */
+  file?: string;
+  /** Read from an API with the reader's key rather than bundled. */
+  remote?: "esv";
   /** VPL zip the build script imports; the BSB has its own importer. */
   source?: string;
   license: string;
@@ -44,6 +48,11 @@ export const TRANSLATIONS: Translation[] = [
     file: "text-asv.json", source: "https://ebible.org/Scriptures/eng-asv_vpl.zip",
     license: "Public domain", licenseUrl: "https://ebible.org/eng-asv/",
     homepage: "https://ebible.org/eng-asv/",
+  },
+  {
+    id: "esv", abbr: "ESV", name: "English Standard Version", language: "en", languageName: "English",
+    remote: "esv", license: "© 2001 by Crossway. Used by permission. All rights reserved.",
+    licenseUrl: "https://api.esv.org/", homepage: "https://www.esv.org/",
   },
   {
     id: "blivre", abbr: "BLIVRE", name: "Bíblia Livre", language: "pt", languageName: "Português",

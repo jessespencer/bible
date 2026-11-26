@@ -8,6 +8,7 @@ import {
 import { initSelectMenus } from '@jessespencer/bible-ui/select-menu';
 import { initTooltips } from '@jessespencer/bible-ui/tooltip';
 import { shareView } from '@jessespencer/bible-ui/share';
+import { appendEsvCredit, createEsvKeyForm, ESV_MARK, esvBookLimit, EsvKeyError, heldEsv, loadEsv } from '@jessespencer/bible-ui/esv';
 import { Check, createElement, Compass, Grid3x3, Orbit, Rainbow, Share2, Shuffle, Scaling } from 'lucide';
 import { GENRES } from './data/genres';
 import { BOOKS } from './data/books';
@@ -283,6 +284,59 @@ function renderCompanion() {
     renderPassageView(companionTarget(), store, passage, connections, texts, expanded, highlight);
     setNavEnabled(neighborPassage(passage, -1) !== null, neighborPassage(passage, 1) !== null);
   }
+  if (translation.remote) afterEsvRender();
+}
+
+// ─── ESV: read live, a request per view, only for the verses the panel shows ───
+
+// Verses the last render asked for and didn't have.
+const esvMisses = new Set<number>();
+// What the last request brought. A view needing more than Crossway lets us hold would push its
+// own verses out; those stay "Loading" rather than being asked for again and again.
+let esvJustLoaded = new Set<number>();
+// Why the key form is showing, or null while the key works.
+let esvProblem: string | null = null;
+
+const esvTexts: VerseTexts = verse => {
+  const text = heldEsv(verse);
+  if (text === undefined) esvMisses.add(verse);
+  return text;
+};
+
+function afterEsvRender() {
+  if (esvProblem !== null) {
+    esvMisses.clear();
+    companionTarget().content.prepend(createEsvKeyForm(esvProblem, () => {
+      esvProblem = null;
+      esvJustLoaded = new Set();
+      renderCompanion();
+    }));
+    return;
+  }
+  const wanted = [...esvMisses].filter(verse => !esvJustLoaded.has(verse));
+  esvMisses.clear();
+  esvJustLoaded = new Set();
+  if (wanted.length === 0) return;
+  loadEsv(wanted).then(
+    () => {
+      if (!translation.remote) return;
+      esvJustLoaded = new Set(wanted);
+      renderCompanion();
+    },
+    err => {
+      if (!(err instanceof EsvKeyError)) return console.error(err);
+      esvProblem = err.message;
+      if (translation.remote) renderCompanion();
+    },
+  );
+}
+
+/** The text for a range, loading it first when the ESV is being read, up to half its book. */
+async function textsFor(start: number, end: number): Promise<string[]> {
+  const count = Math.min(end - start + 1, translation.remote ? esvBookLimit(start) : Infinity);
+  const verses = Array.from({ length: count }, (_, i) => start + i);
+  if (translation.remote) await loadEsv(verses).catch(() => {});
+  return verses.map(verse => (translation.remote ? heldEsv(verse) : texts?.(verse)) ?? '');
 }
 
 function writeUrl(mode: 'push' | 'replace') {
@@ -492,7 +546,11 @@ function setupShuffle() {
 
   function showText(verseId: string, textId: string, start: number, end: number) {
     document.getElementById(verseId)!.textContent = formatRange(start, end);
-    document.getElementById(textId)!.textContent = texts?.[start] ?? '';
+    const text = document.getElementById(textId)!;
+    text.textContent = '';
+    void textsFor(start, start).then(([verse]) => {
+      text.textContent = verse && translation.remote ? `${verse} ${ESV_MARK}` : verse ?? '';
+    });
   }
 
   function doShuffle() {
@@ -575,11 +633,12 @@ function setupKeyboard() {
 
 async function copyPassage(button: HTMLElement, start: number, end: number) {
   const passage: Passage = { start, end, label: formatRange(start, end) };
-  const lines = [];
-  for (let verse = start; verse <= end; verse++) lines.push(texts?.[verse] ?? '');
+  const lines = await textsFor(start, end);
   const version = translation.id === DEFAULT_TRANSLATION.id ? '' : `&tr=${translation.id}`;
   const url = `${window.location.origin}${window.location.pathname}?ref=${passageToParam(passage)}${version}`;
-  const copied = await writeClipboard(`${lines.join(' ')}\n— ${passage.label} (${translation.abbr})\n${url}`);
+  // Past the ESV's limit the copy stops short, and an ellipsis says so.
+  const cut = lines.length < end - start + 1 ? ' …' : '';
+  const copied = await writeClipboard(`${lines.join(' ')}${cut}\n— ${passage.label} (${translation.abbr})\n${url}`);
   const state = copied ? 'copied' : 'copy-failed';
   button.classList.add(state);
   setTimeout(() => button.classList.remove(state), COPIED_FEEDBACK_MS);
@@ -895,20 +954,32 @@ function restoreFromUrl() {
 
 async function loadTexts() {
   const wanted = translation;
+  if (wanted.remote) {
+    texts = esvTexts;
+    renderCompanion();
+    return;
+  }
   const response = await fetch(`${import.meta.env.BASE_URL}data/${wanted.file}`);
   if (!response.ok) throw new Error(`Failed to load verse text (${response.status})`);
   const loaded = await response.json() as string[];
   // A quicker pick may have landed first; only the current translation's text is shown.
   if (wanted !== translation) return;
-  texts = loaded;
+  texts = verse => loaded[verse];
   renderCompanion();
 }
 
 function chooseTranslation(next: Translation, fromPicker: boolean) {
   translation = next;
-  setReading(next.abbr, next.language);
+  setReading({
+    abbr: next.abbr,
+    language: next.language,
+    mark: next.remote ? ESV_MARK : undefined,
+    limit: next.remote ? esvBookLimit : undefined,
+  });
   translationPicker?.set(next);
-  document.getElementById('companion-source')!.textContent = `${next.name} · ${next.license}`;
+  const source = document.getElementById('companion-source')!;
+  source.textContent = next.remote ? '' : `${next.name} · ${next.license}`;
+  if (next.remote) appendEsvCredit(source);
   if (!fromPicker) return;
   saveTranslation(next);
   texts = null;

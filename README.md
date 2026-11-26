@@ -81,7 +81,7 @@ By Heart draws the same list in its own type: its wordmark opens the apps on a s
 ## Across Atlas and Lineage
 
 - **Night or Day.** Deep Night by default, parchment by day. Your choice carries from one app to the other.
-- **Many translations.** Atlas and Lineage read in the public-domain BSB, KJV, WEB and ASV, and in Portuguese, German, Italian and Spanish. Links open the ESV, NIV, NLT and NASB on their own sites.
+- **Many translations.** Atlas and Lineage read in the public-domain BSB, KJV, WEB and ASV, and in Portuguese, German, Italian and Spanish. Atlas, Lineage and Bread Alone also read the ESV with your own free key from [api.esv.org](https://api.esv.org/account/create-application/). Links open the NIV, NLT and NASB on their own sites.
 - **Shareable.** Every view has its own address, like `?ref=John.3.16` or `?figure=king-david`, and the share button sends it.
 - **Offline.** After a first visit, both work without a connection and can be installed from your browser.
 - **Phones too.** Pinch to zoom, pan with a finger, and read in a bottom sheet.
@@ -139,7 +139,7 @@ The apps used to live at `/rainbow/` and `/rainbow/timeline/`. Those addresses r
 ## Data and credits
 
 - **Cross-references:** [OpenBible.info](https://www.openbible.info/labs/cross-references/) (CC BY 4.0), largely from the public-domain *Treasury of Scripture Knowledge*.
-- **Scripture:** the [Berean Standard Bible](https://berean.bible/) and the other bundled translations are in the public domain. By Heart loads its translations from the [Bible API](https://bible.helloao.org), [api.esv.org](https://api.esv.org) and [API.Bible](https://api.bible).
+- **Scripture:** the [Berean Standard Bible](https://berean.bible/) and the other bundled translations are in the public domain. By Heart loads its translations from the [Bible API](https://bible.helloao.org), [api.esv.org](https://api.esv.org) and [API.Bible](https://api.bible), and the other apps read the ESV from api.esv.org. Following [Crossway's conditions](https://api.esv.org/#conditions), ESV text is held in memory only and never more than 500 verses or half a book at once. In development, a `VITE_ESV_KEY` in `.env.local` at the repo root saves pasting the key in each app.
 - **Chronology:** James Ussher's *Annals of the World* before the monarchy, and Edwin R. Thiele's *The Mysterious Numbers of the Hebrew Kings* for the divided kingdom.
 - **Greek:** [STEP Bible](https://www.STEPBible.org) and Tyndale House, Cambridge (CC BY 4.0 and CC BY-NC 4.0).
 

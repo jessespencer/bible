@@ -66,6 +66,7 @@ The shared package is a local dependency at `../bible-ui`. Atlas's `src/style.cs
 - `public/data/links.bin` — Int16 rows of `[from, toStart, toEnd, votes]`, strongest first
 - `public/data/bsb.json` — verse text in canonical order, loaded after first paint
 - `public/data/text-<id>.json` — the other translations in the same shape, listed in bible-ui's `/translations`. `pnpm build:translations` maps each eBible VPL file to KJV numbering and drops (never guesses) verses that don't fit. Lineage reads these files too
+- The ESV has no file: `@jessespencer/bible-ui/esv` fetches the verses the companion renders, and `afterEsvRender()` in `main.ts` asks for the misses. Crossway caps shown and held text at 500 verses or half a book (`esvBookLimit`, no exemption for short books), wants "(ESV)" after each quotation and a www.esv.org link on the page. Never write ESV text to storage or the service worker
 - Verses are 0-based indices into KJV numbering (31,102 verses). The BSB leaves 16 verses empty; 3 John 15 folds into 14
 - Pipeline: `pnpm build:data` downloads to `raw-data/` (ignored) and rebuilds both files
 

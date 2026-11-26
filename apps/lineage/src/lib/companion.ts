@@ -7,6 +7,7 @@ import { APPS, appHref } from "@jessespencer/bible-ui";
 import { setupSheet } from "@jessespencer/bible-ui/sheet";
 import { shareView } from "@jessespencer/bible-ui/share";
 import { createTranslationPicker } from "@jessespencer/bible-ui/translation-picker";
+import { appendEsvCredit, createEsvKeyForm, ESV_MARK, EsvKeyError, heldEsv, loadEsv } from "@jessespencer/bible-ui/esv";
 import { Check, createElement, Share2 } from "lucide";
 import {
   DEFAULT_TRANSLATION, LINKED_TRANSLATIONS, readElsewhereHref, saveTranslation, savedTranslation, translationById,
@@ -38,6 +39,16 @@ interface CompanionEvents {
   /** The reader picked another translation. */
   onTranslation: () => void;
 }
+
+/** The verses' text in a translation: bundled, or read live from Crossway for the ESV. */
+const verseTexts = async (reading: Translation, verses: number[]): Promise<string[]> => {
+  if (reading.remote) {
+    await loadEsv(verses);
+    return verses.map((verse) => heldEsv(verse) ?? "");
+  }
+  const bible = await loadBible(reading.file!);
+  return verses.map((verse) => bible[verse] ?? "");
+};
 
 const eraAt = (year: number): string =>
   ERA_BANDS.find((era) => year >= era.startYear && year < era.endYear)?.name ?? "";
@@ -122,7 +133,10 @@ export const initCompanion = (
   const sheet = setupSheet(panel, handle, onClose);
 
   let shown: { figure: TimelineFigure; alongside: TimelineFigure[] } | null = null;
-  const showSource = () => { source.textContent = `${translation.name} · ${translation.license}`; };
+  const showSource = () => {
+    source.textContent = translation.remote ? "" : `${translation.name} · ${translation.license}`;
+    if (translation.remote) appendEsvCredit(source);
+  };
   showSource();
   createTranslationPicker({
     parent: version,
@@ -156,20 +170,25 @@ export const initCompanion = (
     text.textContent = "Loading…";
 
     text.lang = translation.language;
-    loadBible(translation.file).then(
+    const last = Math.min(first.end, first.start + PREVIEW_VERSES - 1);
+    const shownVerses = Array.from({ length: last - first.start + 1 }, (_, i) => first.start + i);
+    verseTexts(translation, shownVerses).then(
       (verses) => {
         if (id !== renderId) return;
         text.classList.remove("cp-loading");
         text.replaceChildren();
-        const last = Math.min(first.end, first.start + PREVIEW_VERSES - 1);
-        for (let i = first.start; i <= last; i++) {
-          if (!verses[i]) continue;
-          el("sup", undefined, text as HTMLElement).textContent = String(locate(i).verse);
+        shownVerses.forEach((verse, i) => {
+          if (!verses[i]) return;
+          el("sup", undefined, text as HTMLElement).textContent = String(locate(verse).verse);
           text.append(`${verses[i]} `);
-        }
+        });
+        if (translation.remote) text.append(ESV_MARK);
       },
-      () => {
-        if (id === renderId) text.textContent = "Scripture text couldn't load.";
+      (error: unknown) => {
+        if (id !== renderId) return;
+        if (error instanceof EsvKeyError) {
+          text.replaceWith(createEsvKeyForm(error.message, () => handle_.showFigure(figure, shown?.alongside ?? [])));
+        } else text.textContent = "Scripture text couldn't load.";
       },
     );
 
@@ -182,7 +201,7 @@ export const initCompanion = (
     // Copyrighted translations can't be bundled, so the passage links out to them instead.
     const elsewhere = el("p", "cp-elsewhere", root);
     elsewhere.append("Also in ");
-    LINKED_TRANSLATIONS.forEach((version, i) => {
+    LINKED_TRANSLATIONS.filter((version) => version !== translation.abbr).forEach((version, i) => {
       if (i > 0) elsewhere.append(" · ");
       const link = el("a", undefined, elsewhere);
       // The chapter Atlas opens, like "1Sam 16"; a label such as "1 Samuel – 1 Kings" is no search.
