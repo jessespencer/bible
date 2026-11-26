@@ -75,7 +75,10 @@ describe('ReciteStage', () => {
     start() {}
     stop() {}
     hear(...results: string[]) {
-      act(() => this.onresult?.({ results: results.map((transcript) => ({ 0: { transcript }, isFinal: true })) }))
+      this.send(results.map((transcript) => ({ transcript, isFinal: true })))
+    }
+    send(results: { transcript: string; isFinal: boolean }[]) {
+      act(() => this.onresult?.({ results: results.map(({ transcript, isFinal }) => ({ 0: { transcript }, isFinal })) }))
     }
   }
 
@@ -94,5 +97,22 @@ describe('ReciteStage', () => {
     expect(transcript).toMatch(/grace to you and peace\s+from god/)
     expect(live.position).toBe(7)
     expect(live.matched.size).toBe(7)
+  })
+
+  it('does not hear a phrase twice when Chrome settles several interim results into one', () => {
+    ;(window as unknown as Record<string, unknown>).SpeechRecognition = FakeRecognition
+    const onHeard = vi.fn()
+    render(<ReciteStage tokens={tokens} lines={senseLines(tokens)} onDone={vi.fn()} onHeard={onHeard} onProblem={vi.fn()} />)
+    FakeRecognition.last.send([
+      { transcript: 'grace to', isFinal: false },
+      { transcript: ' you', isFinal: false },
+    ])
+    // The list shrinks as the two interim results settle into one final result.
+    FakeRecognition.last.send([{ transcript: 'grace to you', isFinal: true }])
+    const [transcript, live] = onHeard.mock.lastCall!
+    expect(transcript.trim()).toBe('grace to you')
+    expect(live.resets).toBe(0)
+    expect(live.position).toBe(3)
+    expect(live.matched.size).toBe(3)
   })
 })

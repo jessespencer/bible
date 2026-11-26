@@ -318,6 +318,7 @@ export const VanishStage = ({ tokens, lines, seed, onDone }: VanishStageProps) =
 
 interface SpeechResultLike {
   0: { transcript: string }
+  isFinal: boolean
 }
 
 interface RecognitionLike {
@@ -364,20 +365,27 @@ export const ReciteStage = ({ tokens, lines, verseNumbers, onDone, onHeard, onCa
     let active = true
     let heardBefore = ''
     let session = ''
-    let sessionLength = 0
+    // The settled part of this session. Interim results come and go, and Chrome merges several of
+    // them into one final result when you pause, so only settled results are counted.
+    let settled = ''
+    let settledCount = 0
     const live = emptyHeard()
     recognition.continuous = true
     recognition.interimResults = true
     recognition.lang = 'en-US'
     recognition.onresult = (e) => {
       // Some browsers (Safari especially) start the list of results afresh mid-recital without
-      // ending the session. Keep what was heard before the list shrank.
-      if (e.results.length < sessionLength) {
-        heardBefore = `${heardBefore} ${session}`
+      // ending the session. Settled results never vanish otherwise, so fewer of them is a reset:
+      // keep what had settled before it.
+      const results = Array.from(e.results)
+      const finals = results.filter((r) => r.isFinal)
+      if (finals.length < settledCount) {
+        heardBefore = `${heardBefore} ${settled}`
         live.resets += 1
       }
-      sessionLength = e.results.length
-      session = Array.from(e.results, (r) => r[0].transcript).join(' ')
+      settledCount = finals.length
+      settled = finals.map((r) => r[0].transcript).join(' ')
+      session = results.map((r) => r[0].transcript).join(' ')
       const transcript = `${heardBefore} ${session}`
       const next = alignSpeech(latest.current.tokens, transcript)
       noteHeard(live, latest.current.tokens, next)
@@ -405,7 +413,8 @@ export const ReciteStage = ({ tokens, lines, verseNumbers, onDone, onHeard, onCa
       if (!active) return
       heardBefore = `${heardBefore} ${session}`
       session = ''
-      sessionLength = 0
+      settled = ''
+      settledCount = 0
       live.restarts += 1
       try {
         recognition.start()
