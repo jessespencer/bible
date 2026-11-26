@@ -245,9 +245,9 @@ const cardText = async (): Promise<string[]> => {
   return text;
 };
 
-// Crossway asks for its full notice and a link to www.esv.org wherever ESV text is shown.
+// Crossway asks for a link to www.esv.org wherever ESV text is shown; its full notice is behind Credits.
 const notice = el("p", "results__notice");
-appendEsvCredit(notice, true);
+appendEsvCredit(notice);
 
 const render = async () => {
   let text: string[];

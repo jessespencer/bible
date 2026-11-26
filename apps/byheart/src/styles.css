@@ -149,6 +149,67 @@ kbd {
   text-decoration: underline;
 }
 
+/* Credits beside the text read as the line they sit in, not as a call to act. */
+.quiet,
+.link.quiet {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--hair);
+  text-underline-offset: 3px;
+}
+
+.quiet:hover,
+.link.quiet:hover {
+  text-decoration-color: currentColor;
+}
+
+/* The Credits dialog stands as the app's copyright page. */
+.credits {
+  margin: auto;
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 3rem);
+  padding: 1.75rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.credits::backdrop {
+  background: color-mix(in srgb, var(--paper) 70%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.credits h2 {
+  margin: 0 0 0.75rem;
+  padding-right: 1.5rem;
+  font-family: var(--display);
+  font-size: 1.6rem;
+  font-weight: 400;
+}
+
+.credits p + p {
+  margin-top: 0.6rem;
+}
+
+.credits-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.9rem;
+  background: none;
+  border: none;
+  color: var(--soft);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.credits-close:hover {
+  color: var(--ink);
+}
+
 /* The page */
 
 .page {

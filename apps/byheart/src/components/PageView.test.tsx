@@ -157,15 +157,20 @@ describe('PageView in the ESV', () => {
     expect(screen.queryByRole('navigation', { name: /Parts of/ })).not.toBeInTheDocument()
   })
 
-  it('marks the text as the ESV and carries Crossway’s notice and a link to www.esv.org', async () => {
+  it('marks the text as the ESV, links www.esv.org and keeps Crossway’s full notice behind Credits', async () => {
     render(page('ESV', 'JUD'))
     await screen.findByText(/Jude words 1\./)
     const mark = document.querySelector('.leaf .esv-mark')!
     expect(mark).toHaveTextContent('(ESV)')
     expect(mark.previousElementSibling).toHaveTextContent('Jude words 9.')
     const colophon = document.querySelector('.colophon') as HTMLElement
-    expect(colophon).toHaveTextContent(/Scripture quotations are from the ESV® Bible/)
-    expect(colophon).toHaveTextContent(/more than one half of any book of the ESV Bible/)
-    expect(within(colophon).getByRole('link', { name: 'www.esv.org' })).toHaveAttribute('href', 'https://www.esv.org')
+    expect(colophon).toHaveTextContent(/ESV® Bible © Crossway/)
+    expect(colophon).not.toHaveTextContent(/Scripture quotations/)
+    expect(within(colophon).getByRole('link', { name: 'esv.org' })).toHaveAttribute('href', 'https://www.esv.org')
+    expect(within(colophon).getByRole('button', { name: 'Credits' })).toBeInTheDocument()
+    // The full notice waits in the Credits dialog, the app's copyright page.
+    const credits = document.querySelector('dialog.credits') as HTMLElement
+    expect(credits).toHaveTextContent(/Scripture quotations are from the ESV® Bible/)
+    expect(credits).toHaveTextContent(/more than one half of any book of the ESV Bible/)
   })
 })

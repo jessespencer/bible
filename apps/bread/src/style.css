@@ -431,8 +431,6 @@ body {
   text-underline-offset: 3px;
 }
 
-.results__notice a { color: var(--accent-text); }
-
 .results__notice {
   max-width: 34rem;
   margin: 18px auto 0;
