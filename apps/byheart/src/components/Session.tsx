@@ -48,8 +48,6 @@ const REVEALS: Partial<Record<Stage, Reveal>> = {
   thread: 'blank',
 }
 
-// Stages where whole words can be typed. Initials and blanks are first-letter drills by design.
-const WORD_STAGES = new Set<Stage>(['trace', 'shapes', 'bare', 'thread'])
 
 const RUN_STAGE = 7
 const FLOURISH_MS = 1100
@@ -154,7 +152,7 @@ export const Session = ({ items: asked, book, translation, progress, onRecord, o
     return tokens.filter((t) => blanks.has(t.id)).map((t) => t.id)
   }, [tokens, stage, seed])
 
-  const typing: Typing = isTest || WORD_STAGES.has(stage) ? settings.typing : 'initials'
+  const typing: Typing = settings.typing
 
   const record = (verse: number, update: (r: VerseRecord) => VerseRecord) =>
     onRecord(verseKey(translation, book.code, item!.chapter, verse), update)
@@ -407,7 +405,7 @@ export const Session = ({ items: asked, book, translation, progress, onRecord, o
         onDone={finishTyped}
         onProgress={isTest ? (p) => (typedSoFar.current = p) : undefined}
         onSpeak={!isTest && speakable && (stage === 'bare' || stage === 'thread') ? () => setSpeaking(true) : undefined}
-        onTyping={!isTest && WORD_STAGES.has(stage) ? (t) => changeSettings({ typing: t }) : undefined}
+        onTyping={isTest ? undefined : (t) => changeSettings({ typing: t })}
       />
     )
   }
