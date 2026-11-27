@@ -16,6 +16,8 @@ export const STAGE_HINTS: Record<Stage, string> = {
 // Where the hint speaks of first letters, typing whole words needs its own.
 export const WORD_HINTS: Partial<Record<Stage, string>> = {
   trace: 'Read it aloud, typing every word.',
+  blanks: 'Type each missing word.',
+  initials: 'Only the first letters remain. Type each word in full.',
   shapes: 'Only the shape of the words remains. Type each one.',
 }
 

@@ -22,7 +22,7 @@ Stop wherever you like. A verse is scored once you reach three quarters of it, a
 
 A spoken test is scored once it is over, by lining the whole transcript up against the text, so a skipped phrase costs only its own words. Typing whole words ignores case and punctuation and allows one slip in a word of five letters or more, marked on the score but not counted against you. Tests grade verses for review the same way a recital always has.
 
-Whole-word typing is also a setting in the learning stages that hide most of the text, and in trace. Initials and blanks stay first-letter drills.
+Every typed stage takes whole words by default; any of them can switch to first letters instead, and the choice carries across stages and tests.
 
 ## Structure map
 

@@ -55,6 +55,26 @@ describe('scoreSpeech', () => {
     expect(missed.size).toBe(0)
   })
 
+  it('does not reach far ahead on a few words said after the recital', () => {
+    const chapter = tokenize([
+      'Paul an apostle of Christ Jesus by the will of God to the saints who are in Ephesus and are faithful in Christ Jesus',
+      'Grace to you and peace from God our Father and the Lord Jesus Christ',
+      'Blessed be the God and Father of our Lord Jesus Christ who has blessed us in Christ with every spiritual blessing',
+    ])
+    const recited = chapter.filter((t) => t.verseIndex < 2)
+    const said = `${recited.map((t) => t.word).join(' ')} every spiritual blessing`
+    const { reached, missed } = scoreSpeech(chapter, said)
+    expect(reached).toBe(recited.length)
+    expect(missed.size).toBe(0)
+  })
+
+  it('follows a long run resumed after a skipped verse', () => {
+    const chapter = tokenize([...passage.map((t) => t.word).join(' ').split(/(?<=blood,) /), 'and he lavished it upon us in all wisdom and insight making known to us the mystery of his will'])
+    const words = chapter.map((t) => t.word)
+    const said = [...words.slice(0, 8), ...words.slice(20)].join(' ')
+    expect(scoreSpeech(chapter, said).reached).toBe(chapter.length)
+  })
+
   it('scores to the end once the recital is finished', () => {
     const { reached, missed } = scoreSpeech(passage, 'in him we have redemption through his blood', true)
     expect(reached).toBe(passage.length)

@@ -109,6 +109,11 @@ export const noteHeard = (heard: HeardLive, tokens: Token[], live: { position: n
   heard.position = Math.max(heard.position, live.position)
 }
 
+// How far past where you had got to a short run of matches may carry you, and how long a run
+// must be to count from further off.
+const SKIP_REACH = 12
+const RESUME_RUN = 8
+
 /**
  * Scores a whole recital once it is over. Unlike the live follower it sees everything at
  * once, so it lines the transcript up with the text the way a diff does and a skipped phrase
@@ -132,14 +137,17 @@ export const scoreSpeech = (tokens: Token[], transcript: string, finished = fals
   const matched: number[] = []
   let i = n
   let j = m
+  // Where a phrase recurs ("the Lord Jesus Christ" ends one verse and opens the next), several
+  // alignments match as many words. Walking back, prefer to pass over text not yet said, so
+  // each word heard sits at its earliest place and a recital is never placed further on than it got.
   while (i > 0 && j > 0) {
     const here = table[i * width + j]
-    if (sounds(words[j - 1], heard[i - 1]) && here === table[(i - 1) * width + j - 1] + 1) {
+    if (table[i * width + j - 1] === here) j -= 1
+    else if (sounds(words[j - 1], heard[i - 1]) && here === table[(i - 1) * width + j - 1] + 1) {
       matched.push(j - 1)
       i -= 1
       j -= 1
-    } else if (table[(i - 1) * width + j] >= table[i * width + j - 1]) i -= 1
-    else j -= 1
+    } else i -= 1
   }
   matched.reverse()
 
@@ -147,10 +155,20 @@ export const scoreSpeech = (tokens: Token[], transcript: string, finished = fals
   if (finished) reached = m
   else if (matched.length === 1) reached = matched[0] + 1
   else {
-    matched.forEach((index, k) => {
-      const near = (other: number | undefined) => other !== undefined && Math.abs(other - index) <= 3
-      if (near(matched[k - 1]) || near(matched[k + 1])) reached = index + 1
+    // Matches close together form a run. A run near where you had got to carries you on, past a
+    // skipped phrase if need be. One far ahead must be long to count: a few words said after you
+    // stopped can always be matched somewhere later in a chapter, and must not reach that far.
+    const runs: number[][] = []
+    matched.forEach((index) => {
+      const run = runs[runs.length - 1]
+      if (run && index - run[run.length - 1] <= 3) run.push(index)
+      else runs.push([index])
     })
+    for (const run of runs) {
+      if (run.length < 2) continue
+      if (run[0] - reached > SKIP_REACH && run.length < RESUME_RUN) continue
+      reached = run[run.length - 1] + 1
+    }
   }
   // Whatever was matched live counts too: the final score never falls below what you watched.
   reached = Math.max(reached, live.position)
